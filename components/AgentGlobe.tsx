@@ -179,7 +179,17 @@ export default function AgentGlobe({
 
   const activeNode = GLOBAL_AGENT_NODES[selectedNodeIndex];
 
-  // Rotation angles
+  // Stable references for continuous rendering without WebGL rebuilds
+  const selectedNodeIndexRef = useRef(selectedNodeIndex);
+  selectedNodeIndexRef.current = selectedNodeIndex;
+
+  const isAutoCyclingRef = useRef(isAutoCycling);
+  isAutoCyclingRef.current = isAutoCycling;
+
+  const isRotatingRef = useRef(isRotating);
+  isRotatingRef.current = isRotating;
+
+  // Angles
   const phiRef = useRef(4.8);
   const thetaRef = useRef(0.3);
   const targetPhiRef = useRef(4.8);
@@ -228,24 +238,15 @@ export default function AgentGlobe({
     targetThetaRef.current = node.thetaTarget;
   }, []);
 
-  // WebGL Globe Initialization with COBE v2
+  // WebGL Globe Initialization with COBE (Initialized once on mount)
   useEffect(() => {
-    let width = 0;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const onResize = () => {
-      if (canvas) {
-        width = canvas.offsetWidth;
-      }
-    };
-    window.addEventListener("resize", onResize);
-    onResize();
-
-    const canvasWidth = width || 500;
-
     let globe: CobeGlobe | null = null;
     let animationFrameId: number;
+
+    const canvasWidth = canvas.offsetWidth || 500;
 
     try {
       globe = createGlobe(canvas, {
@@ -267,14 +268,14 @@ export default function AgentGlobe({
         arcHeight: 0.3,
         markers: GLOBAL_AGENT_NODES.map((node, i) => ({
           location: [node.lat, node.long],
-          size: i === selectedNodeIndex ? 0.12 : 0.06,
+          size: i === 0 ? 0.12 : 0.06,
         })),
       });
 
       const animate = () => {
         if (globe) {
           if (!pointerInteracting.current) {
-            if (isRotating && isAutoCycling) {
+            if (isRotatingRef.current && isAutoCyclingRef.current) {
               phiRef.current += 0.003;
             } else {
               phiRef.current += (targetPhiRef.current - phiRef.current) * 0.06;
@@ -285,10 +286,11 @@ export default function AgentGlobe({
             pointerInteractionMovement.current = 0;
           }
 
+          const currentIdx = selectedNodeIndexRef.current;
           const pulse = (Math.sin(Date.now() / 200) + 1) / 2;
           const updatedMarkers = GLOBAL_AGENT_NODES.map((node, i) => ({
             location: [node.lat, node.long] as [number, number],
-            size: i === selectedNodeIndex ? 0.08 + pulse * 0.04 : 0.05,
+            size: i === currentIdx ? 0.08 + pulse * 0.04 : 0.05,
           }));
 
           globe.update({
@@ -305,6 +307,17 @@ export default function AgentGlobe({
       console.error("Failed to initialize WebGL Cobe globe:", err);
     }
 
+    const onResize = () => {
+      if (canvas && globe) {
+        const newWidth = canvas.offsetWidth || 500;
+        globe.update({
+          width: newWidth * 2,
+          height: newWidth * 2,
+        });
+      }
+    };
+    window.addEventListener("resize", onResize);
+
     return () => {
       window.removeEventListener("resize", onResize);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -312,7 +325,7 @@ export default function AgentGlobe({
         globe.destroy();
       }
     };
-  }, [selectedNodeIndex, isRotating, isAutoCycling]);
+  }, []);
 
   return (
     <div
@@ -368,7 +381,7 @@ export default function AgentGlobe({
       <div className="relative grid grid-cols-1 lg:grid-cols-12 min-h-[540px] items-center p-4 sm:p-8 gap-8">
         {/* Left / Center: 3D WebGL Globe Viewport */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center relative select-none">
-          <div className="relative w-full max-w-[500px] aspect-square flex items-center justify-center">
+          <div className="relative w-full max-w-[460px] aspect-square flex items-center justify-center">
             {/* Ambient Backlight Glow Ring */}
             <div className="absolute inset-4 rounded-full bg-[#4ECB71]/10 blur-3xl pointer-events-none" />
             <div className="absolute inset-16 rounded-full bg-[#B09CFB]/10 blur-2xl pointer-events-none" />
@@ -403,7 +416,7 @@ export default function AgentGlobe({
                 }
               }}
               className="w-full h-full cursor-grab active:cursor-grabbing transition-opacity duration-500"
-              style={{ width: "100%", height: "100%", contain: "layout paint size" }}
+              style={{ width: "100%", height: "100%", aspectRatio: "1 / 1", contain: "layout paint size" }}
             />
 
             {/* Hint Overlay */}
@@ -513,7 +526,7 @@ export default function AgentGlobe({
             <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
               <button
                 onClick={() => setIsAutoCycling(!isAutoCycling)}
-                className="px-3 py-1.5 rounded-[8px] bg-[#1F2023] hover:bg-[#2A2B2F] border border-white/10 text-xs font-mono text-white/80 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-[8px] bg-[#1F2023] hover:bg-[#2A2B2F] border border-white/10 text-xs font-mono text-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 {isAutoCycling ? (
                   <>
