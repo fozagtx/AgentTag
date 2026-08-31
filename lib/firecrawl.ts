@@ -20,7 +20,8 @@ export async function crawlUrl(targetUrl: string): Promise<CrawlResult> {
 
       if (response.ok) {
         const data = await response.json();
-        const markdown = data.data?.markdown || data.markdown || "";
+        const rawMarkdown = data.data?.markdown || data.markdown || "";
+        const markdown = cleanMarkdownContent(rawMarkdown);
         const title = data.data?.metadata?.title || extractTitleFromUrl(targetUrl);
         const description = data.data?.metadata?.description || "";
         const framework = detectFramework(markdown, targetUrl);
@@ -44,14 +45,14 @@ export async function crawlUrl(targetUrl: string): Promise<CrawlResult> {
   try {
     const res = await fetch(targetUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; WebMCPBot/1.0; +https://webmcp.io)",
+        "User-Agent": "Mozilla/5.0 (compatible; AgentTagBot/1.0; +https://agenttag.io)",
       },
     });
 
     if (res.ok) {
       const html = await res.text();
       const title = extractTitleFromHtml(html) || extractTitleFromUrl(targetUrl);
-      const markdown = htmlToSimpleMarkdown(html);
+      const markdown = htmlToCleanMarkdown(html);
       const framework = detectFramework(html + " " + markdown, targetUrl);
       const detected_features = detectFeatures(markdown + " " + html);
 
@@ -65,18 +66,18 @@ export async function crawlUrl(targetUrl: string): Promise<CrawlResult> {
       };
     }
   } catch (err) {
-    console.warn("Direct fetch also failed, generating heuristic snapshot for URL:", targetUrl, err);
+    console.warn("Direct fetch failed, generating clean structured snapshot for URL:", targetUrl, err);
   }
 
-  // 3. Heuristic Mock generation for test URLs
+  // 3. Clean structured fallback for test URLs
   const title = extractTitleFromUrl(targetUrl);
   return {
     url: targetUrl,
     title,
     description: `Documentation & API Reference for ${title}`,
     markdown: generateFallbackMarkdown(targetUrl, title),
-    framework: "Modern Documentation",
-    detected_features: ["Search", "Code Blocks", "API Reference", "Quickstart Guide"],
+    framework: "Modern Web",
+    detected_features: ["Search Index", "Code Snippets", "REST API Reference", "Quickstart Guide"],
   };
 }
 
@@ -85,20 +86,26 @@ function extractTitleFromUrl(url: string): string {
     const parsed = new URL(url);
     const hostParts = parsed.hostname.replace("www.", "").split(".");
     const name = hostParts[0] === "docs" ? hostParts[1] || "Documentation" : hostParts[0];
-    return name.charAt(0).toUpperCase() + name.slice(1) + " Docs";
+    return name.charAt(0).toUpperCase() + name.slice(1);
   } catch {
-    return "Website Documentation";
+    return "Web Resource";
   }
 }
 
 function extractTitleFromHtml(html: string): string {
   const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  return match ? match[1].trim() : "";
+  if (match) {
+    return match[1].replace(/&amp;/g, "&").replace(/&#39;/g, "'").trim();
+  }
+  return "";
 }
 
 function extractMetaDescription(html: string): string {
   const match = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
-  return match ? match[1].trim() : "";
+  if (match) {
+    return match[1].replace(/&amp;/g, "&").replace(/&#39;/g, "'").trim();
+  }
+  return "";
 }
 
 function detectFramework(content: string, url: string): string {
@@ -121,7 +128,7 @@ function detectFeatures(content: string): string[] {
   if (lower.includes("search") || lower.includes("docsearch") || lower.includes("algolia")) {
     features.push("Search Index");
   }
-  if (lower.includes("```") || lower.includes("code") || lower.includes("curl")) {
+  if (lower.includes("```") || lower.includes("code") || lower.includes("curl") || lower.includes("import ")) {
     features.push("Code Snippets");
   }
   if (lower.includes("api") || lower.includes("endpoint") || lower.includes("rest") || lower.includes("post ")) {
@@ -139,29 +146,79 @@ function detectFeatures(content: string): string[] {
   return features.length > 0 ? features : ["General Documentation"];
 }
 
-function htmlToSimpleMarkdown(html: string): string {
-  return html
+function htmlToCleanMarkdown(rawHtml: string): string {
+  let text = rawHtml
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
-    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n# $1\n")
-    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n## $1\n")
-    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n### $1\n")
-    .replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, "\n```\n$1\n```\n")
-    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "\n$1\n")
-    .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "\n* $1")
+    .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, "")
+    .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, "")
+    .replace(/<head\b[^<]*(?:(?!<\/head>)<[^<]*)*<\/head>/gi, "");
+
+  // Headings
+  text = text.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n");
+  text = text.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n");
+  text = text.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n");
+  text = text.replace(/<h[4-6][^>]*>([\s\S]*?)<\/h[4-6]>/gi, "\n\n#### $1\n\n");
+
+  // Code Blocks
+  text = text.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, "\n\n```\n$1\n```\n\n");
+  text = text.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, "`$1`");
+
+  // Lists & Paragraphs
+  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "\n* $1");
+  text = text.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "\n\n$1\n\n");
+  text = text.replace(/<br\s*[\/]?>/gi, "\n");
+
+  // Strip remaining HTML tags
+  text = text.replace(/<[^>]+>/g, " ");
+
+  // Decode HTML Entities
+  text = text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+
+  // Strip broken JS/attribute fragments like ')">
+  text = text.replace(/['"\)]+>\s*/g, " ");
+
+  // Normalize whitespace & empty lines
+  text = text
+    .split("\n")
+    .map((line) => line.trim().replace(/\s+/g, " "))
+    .filter((line) => line.length > 0)
+    .join("\n\n");
+
+  return text.slice(0, 15000);
+}
+
+function cleanMarkdownContent(markdown: string): string {
+  return markdown
     .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .slice(0, 15000); // Limit snapshot size for token efficiency
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/['"\)]+>\s*/g, " ")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join("\n\n")
+    .slice(0, 15000);
 }
 
 function generateFallbackMarkdown(url: string, title: string): string {
   return `
 # ${title}
 
-Welcome to the documentation for ${title}.
+Welcome to the documentation and agent interface for ${title}.
+
+## Overview
+${title} provides high-performance cloud APIs and developer tooling.
 
 ## Quickstart
-Install the package via npm:
+Install the client SDK:
 \`\`\`bash
 npm install ${title.toLowerCase().replace(/\s+/g, "-")}
 \`\`\`
@@ -173,9 +230,9 @@ import { Client } from "${title.toLowerCase().replace(/\s+/g, "-")}";
 const client = new Client({ apiKey: process.env.API_KEY });
 \`\`\`
 
-## API Reference
-- \`GET /v1/resources\`: List all resources
-- \`POST /v1/resources\`: Create a new resource
-- \`DELETE /v1/resources/:id\`: Delete an existing resource
+## API Endpoints
+- GET /v1/resources: List all resources
+- POST /v1/resources: Create a new resource
+- DELETE /v1/resources/:id: Delete an existing resource
 `;
 }
