@@ -142,8 +142,8 @@ export default function StudioPage() {
   if (loading) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 bg-[#B09CFB] text-[#151617]">
-        <Cpu className="h-8 w-8 text-[#151617] animate-spin" />
-        <p className="font-display text-xl uppercase tracking-wider">
+        <Cpu className="h-8 w-8 text-[#151617] animate-spin-fast" />
+        <p className="font-display text-xl uppercase tracking-wider text-balance">
           Loading WebMCP Studio...
         </p>
       </div>
@@ -152,10 +152,10 @@ export default function StudioPage() {
 
   if (!config) {
     return (
-      <div className="max-w-md mx-auto my-20 p-8 bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg rounded-[16px] text-center">
+      <div className="max-w-md mx-auto my-20 p-8 bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg rounded-[16px] text-center ring-1 ring-black/5">
         <h2 className="font-display text-2xl text-[#151617]">CONFIG NOT FOUND</h2>
-        <p className="text-sm font-medium text-[#151617]/70 mt-2">Target site identifier does not exist in registry.</p>
-        <Link href="/" className="mt-6 inline-block px-6 py-2.5 bg-[#FFBE98] text-[#151617] font-bold text-xs uppercase rounded-[12px] border-2 border-[#151617] shadow-comic-sm">
+        <p className="text-sm font-medium text-[#151617]/70 mt-2 text-pretty">Target site identifier does not exist in registry.</p>
+        <Link href="/" className="mt-6 inline-block px-6 py-2.5 bg-[#FFBE98] text-[#151617] font-bold text-xs uppercase rounded-[10px] border-2 border-[#151617] shadow-comic-sm btn-press">
           Create New Registry
         </Link>
       </div>
@@ -176,16 +176,16 @@ export default function StudioPage() {
   );
 
   return (
-    <div className="w-full min-h-screen bg-[#F5F2F0] text-[#151617] py-10 px-4 sm:px-8">
+    <div className="w-full min-h-screen bg-[#F5F2F0] text-[#151617] py-10 px-4 sm:px-8 font-sans">
       <div className="max-w-[1280px] mx-auto">
         {/* Top Control Header Card */}
-        <div className="p-6 sm:p-8 rounded-[16px] bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="p-6 sm:p-8 rounded-[16px] bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg flex flex-col lg:flex-row lg:items-center justify-between gap-6 ring-1 ring-black/5">
           <div>
             <div className="flex items-center gap-3">
-              <Link href="/" className="p-2 rounded-[8px] bg-[#F5F2F0] hover:bg-[#FFBE98] border-2 border-[#151617] shadow-comic-sm transition-all text-[#151617]">
+              <Link href="/dashboard" className="p-2.5 min-h-[44px] min-w-[44px] rounded-[10px] bg-[#F5F2F0] hover:bg-[#FFBE98] border-2 border-[#151617] shadow-comic-sm transition-all text-[#151617] btn-press flex items-center justify-center">
                 <ArrowLeft className="h-4 w-4" />
               </Link>
-              <h1 className="font-display text-2xl sm:text-4xl text-[#151617]">
+              <h1 className="font-display text-2xl sm:text-4xl text-[#151617] text-balance">
                 {config.title}
               </h1>
               <span className="px-2.5 py-0.5 rounded-[9999px] bg-[#B09CFB] border-2 border-[#151617] text-xs font-mono font-bold text-[#151617] uppercase">
@@ -199,7 +199,7 @@ export default function StudioPage() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
               <span>•</span>
-              <span className="font-mono bg-[#F5F2F0] px-2 py-0.5 rounded-[6px] border border-[#151617]">
+              <span className="font-mono bg-[#F5F2F0] px-2 py-0.5 rounded-[6px] border border-[#151617] tabular-nums">
                 ID: {config.site_id}
               </span>
             </div>
@@ -208,7 +208,7 @@ export default function StudioPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowEmbedModal(true)}
-              className="h-[44px] px-6 rounded-[12px] bg-[#FFBE98] hover:bg-[#ffa978] text-[#151617] font-bold text-xs uppercase tracking-wide border-2 border-[#151617] shadow-comic btn-press flex items-center gap-2"
+              className="h-[44px] min-h-[44px] px-6 rounded-[10px] bg-[#FFBE98] hover:bg-[#ffa978] text-[#151617] font-bold text-xs uppercase tracking-wide border-2 border-[#151617] shadow-comic btn-press flex items-center gap-2"
             >
               <Code2 className="h-4 w-4" />
               <span>Get Embed Snippet</span>
@@ -225,7 +225,7 @@ export default function StudioPage() {
                 <Layers className="h-5 w-5 text-[#151617]" />
                 <h2 className="font-display text-xl text-[#151617]">ACTIVE TOOL REGISTRY</h2>
               </div>
-              <span className="px-2.5 py-0.5 rounded-[9999px] bg-[#4ECB71] border-2 border-[#151617] text-xs font-bold font-mono">
+              <span className="px-2.5 py-0.5 rounded-[9999px] bg-[#4ECB71] border-2 border-[#151617] text-xs font-bold font-mono tabular-nums">
                 {config.tools.filter((t) => t.is_enabled).length}/{config.tools.length} ACTIVE
               </span>
             </div>
@@ -235,7 +235,7 @@ export default function StudioPage() {
               {config.tools.map((tool) => (
                 <div
                   key={tool.id}
-                  className={`p-6 rounded-[16px] border-2 border-[#151617] transition-all ${
+                  className={`p-6 rounded-[16px] border-2 border-[#151617] transition-all ring-1 ring-black/5 ${
                     tool.is_enabled
                       ? "bg-[#FAFAF9] shadow-comic"
                       : "bg-[#FAFAF9]/50 opacity-60 shadow-none"
@@ -254,7 +254,7 @@ export default function StudioPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs font-medium text-[#151617] mt-3 leading-relaxed">{tool.description}</p>
+                      <p className="text-xs font-medium text-[#151617] mt-3 leading-relaxed text-pretty">{tool.description}</p>
 
                       {/* Parameters Chip List */}
                       <div className="flex flex-wrap items-center gap-1.5 mt-4">
@@ -269,10 +269,11 @@ export default function StudioPage() {
                       </div>
                     </div>
 
-                    {/* Toggle Button */}
+                    {/* Toggle Button (44px min touch bounds) */}
                     <button
                       onClick={() => toggleTool(tool.id)}
-                      className="text-[#151617] transition-colors"
+                      className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#151617] transition-colors"
+                      aria-label="Toggle tool active state"
                     >
                       {tool.is_enabled ? (
                         <ToggleRight className="h-8 w-8 text-[#4ECB71]" />
@@ -295,7 +296,7 @@ export default function StudioPage() {
                   </div>
 
                   {expandedSchema === tool.id && (
-                    <pre className="mt-3 p-4 rounded-[12px] bg-[#0D0E0F] text-[#4ECB71] text-[11px] font-mono border-2 border-[#151617] overflow-x-auto">
+                    <pre className="mt-3 p-4 rounded-[10px] bg-[#0D0E0F] text-[#4ECB71] text-[11px] font-mono border-2 border-[#151617] overflow-x-auto ring-1 ring-white/10">
                       {JSON.stringify(tool.parameters, null, 2)}
                     </pre>
                   )}
@@ -304,7 +305,7 @@ export default function StudioPage() {
             </div>
 
             {/* Vibe Prompt: Add Tool via Natural Language */}
-            <div className="p-6 rounded-[16px] bg-[#B09CFB] border-2 border-[#151617] shadow-comic">
+            <div className="p-6 rounded-[16px] bg-[#B09CFB] border-2 border-[#151617] shadow-comic ring-1 ring-black/5">
               <div className="font-display text-lg text-[#151617] mb-2 flex items-center gap-2">
                 <Sparkles className="h-5 w-5" />
                 <span>VIBE REFINE: DESCRIBE ANY CUSTOM TOOL</span>
@@ -315,12 +316,12 @@ export default function StudioPage() {
                   value={vibePrompt}
                   onChange={(e) => setVibePrompt(e.target.value)}
                   placeholder="e.g. 'Add a tool to check team pricing' or 'Add a tool to query CLI flags'"
-                  className="flex-1 px-4 py-2.5 rounded-[12px] bg-[#FAFAF9] border-2 border-[#151617] text-xs font-bold text-[#151617] placeholder:text-[#151617]/50 focus:outline-none"
+                  className="flex-1 px-4 py-2.5 rounded-[10px] bg-[#FAFAF9] border-2 border-[#151617] text-xs font-bold text-[#151617] placeholder:text-[#151617]/50 focus:outline-none min-h-[44px]"
                 />
                 <button
                   type="submit"
                   disabled={isAddingVibe || !vibePrompt.trim()}
-                  className="px-6 py-2.5 rounded-[12px] bg-[#FFBE98] hover:bg-[#ffa978] text-[#151617] font-bold text-xs uppercase border-2 border-[#151617] shadow-comic-sm btn-press flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-6 py-2.5 min-h-[44px] rounded-[10px] bg-[#FFBE98] hover:bg-[#ffa978] text-[#151617] font-bold text-xs uppercase border-2 border-[#151617] shadow-comic-sm btn-press flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Add Tool</span>
@@ -331,7 +332,7 @@ export default function StudioPage() {
 
           {/* Right Column: Live Agent Simulator Card */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="p-6 rounded-[16px] bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg sticky top-24">
+            <div className="p-6 rounded-[16px] bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg sticky top-24 ring-1 ring-black/5">
               <div className="flex items-center justify-between pb-4 border-b-2 border-[#151617]/10">
                 <div className="flex items-center gap-2">
                   <Terminal className="h-5 w-5 text-[#151617]" />
@@ -353,7 +354,7 @@ export default function StudioPage() {
                     setSelectedTool(e.target.value);
                     setToolArgs({});
                   }}
-                  className="w-full px-3 py-2.5 rounded-[12px] bg-[#F5F2F0] border-2 border-[#151617] text-xs font-mono font-bold text-[#151617] focus:outline-none"
+                  className="w-full px-3 py-2.5 rounded-[10px] bg-[#F5F2F0] border-2 border-[#151617] text-xs font-mono font-bold text-[#151617] focus:outline-none min-h-[44px]"
                 >
                   {config.tools
                     .filter((t) => t.is_enabled)
@@ -380,24 +381,27 @@ export default function StudioPage() {
                         placeholder={prop.description || paramName}
                         value={toolArgs[paramName] || ""}
                         onChange={(e) => setToolArgs({ ...toolArgs, [paramName]: e.target.value })}
-                        className="w-full px-3 py-2 rounded-[10px] bg-[#F5F2F0] border-2 border-[#151617] text-xs font-medium text-[#151617] focus:outline-none"
+                        className="w-full px-3 py-2 rounded-[10px] bg-[#F5F2F0] border-2 border-[#151617] text-xs font-medium text-[#151617] focus:outline-none min-h-[40px]"
                       />
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Execute Simulation Button */}
+              {/* Execute Simulation Button (44px min touch, optical translate) */}
               <button
                 onClick={handleSimulate}
                 disabled={isSimulating || !selectedTool}
-                className="mt-6 w-full h-[46px] rounded-[12px] bg-[#4ECB71] hover:bg-[#43b764] text-[#151617] font-bold text-xs uppercase tracking-wide border-2 border-[#151617] shadow-comic btn-press flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="mt-6 w-full h-[46px] min-h-[44px] rounded-[10px] bg-[#4ECB71] hover:bg-[#43b764] text-[#151617] font-bold text-xs uppercase tracking-wide border-2 border-[#151617] shadow-comic btn-press flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isSimulating ? (
-                  <span>Executing Dispatches...</span>
+                  <div className="flex items-center gap-2">
+                    <Cpu className="h-4 w-4 animate-spin-fast" />
+                    <span>Executing Dispatches...</span>
+                  </div>
                 ) : (
                   <>
-                    <Play className="h-4 w-4 fill-current" />
+                    <Play className="h-4 w-4 fill-current translate-x-0.5" />
                     <span>Simulate Agent Tool Call</span>
                   </>
                 )}
@@ -408,9 +412,9 @@ export default function StudioPage() {
                 <div className="mt-5 pt-4 border-t-2 border-[#151617]/10">
                   <div className="font-mono text-[10px] text-[#151617] font-bold uppercase mb-2 flex items-center justify-between">
                     <span>// JSON-RPC 2.0 AGENT RESPONSE</span>
-                    <span className="px-2 py-0.5 rounded-[4px] bg-[#B09CFB] border border-[#151617]">200 OK</span>
+                    <span className="px-2 py-0.5 rounded-[4px] bg-[#B09CFB] border border-[#151617] tabular-nums">200 OK</span>
                   </div>
-                  <pre className="p-4 rounded-[12px] bg-[#0D0E0F] text-[#FAFAF9] font-mono text-[11px] border-2 border-[#151617] max-h-64 overflow-y-auto leading-relaxed">
+                  <pre className="p-4 rounded-[10px] bg-[#0D0E0F] text-[#FAFAF9] font-mono text-[11px] border-2 border-[#151617] max-h-64 overflow-y-auto leading-relaxed ring-1 ring-white/10">
                     {JSON.stringify(simulationResult, null, 2)}
                   </pre>
                 </div>
@@ -422,12 +426,12 @@ export default function StudioPage() {
         {/* Embed Snippet Modal */}
         {showEmbedModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-xl rounded-[20px] max-w-2xl w-full p-8 relative">
+            <div className="bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-xl rounded-[16px] max-w-2xl w-full p-6 sm:p-8 relative ring-1 ring-black/5">
               <div className="flex items-center justify-between pb-4 border-b-2 border-[#151617]">
-                <h3 className="font-display text-2xl text-[#151617]">EMBED WEBMCP SCRIPT</h3>
+                <h3 className="font-display text-2xl text-[#151617]">EMBED AGENTTAG SCRIPT</h3>
                 <button
                   onClick={() => setShowEmbedModal(false)}
-                  className="font-mono text-xs font-bold text-[#151617] p-1.5 rounded-[6px] bg-[#FFBE98] border-2 border-[#151617]"
+                  className="font-mono text-xs font-bold text-[#151617] p-1.5 rounded-[6px] bg-[#FFBE98] border-2 border-[#151617] btn-press"
                 >
                   [✕ CLOSE]
                 </button>
@@ -440,7 +444,7 @@ export default function StudioPage() {
                     01. Paste into &lt;head&gt; or &lt;body&gt;:
                   </div>
                   <div className="relative">
-                    <pre className="p-4 rounded-[12px] bg-[#F5F2F0] text-[#151617] font-mono text-xs overflow-x-auto border-2 border-[#151617]">
+                    <pre className="p-4 rounded-[10px] bg-[#F5F2F0] text-[#151617] font-mono text-xs overflow-x-auto border-2 border-[#151617]">
                       {scriptTagCode}
                     </pre>
                     <button
@@ -449,7 +453,7 @@ export default function StudioPage() {
                         setCopiedScript(true);
                         setTimeout(() => setCopiedScript(false), 2000);
                       }}
-                      className="absolute top-2.5 right-2.5 px-3 py-1 rounded-[8px] bg-[#FFBE98] text-[#151617] text-xs font-bold border-2 border-[#151617] shadow-comic-sm flex items-center gap-1"
+                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-[36px] rounded-[8px] bg-[#FFBE98] text-[#151617] text-xs font-bold border-2 border-[#151617] shadow-comic-sm btn-press flex items-center gap-1"
                     >
                       {copiedScript ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                       <span>{copiedScript ? "Copied" : "Copy"}</span>
@@ -463,7 +467,7 @@ export default function StudioPage() {
                     02. Add to claude_desktop_config.json:
                   </div>
                   <div className="relative">
-                    <pre className="p-4 rounded-[12px] bg-[#0D0E0F] text-[#4ECB71] font-mono text-xs overflow-x-auto border-2 border-[#151617]">
+                    <pre className="p-4 rounded-[10px] bg-[#0D0E0F] text-[#4ECB71] font-mono text-xs overflow-x-auto border-2 border-[#151617] ring-1 ring-white/10">
                       {claudeConfigJson}
                     </pre>
                     <button
@@ -472,7 +476,7 @@ export default function StudioPage() {
                         setCopiedMcp(true);
                         setTimeout(() => setCopiedMcp(false), 2000);
                       }}
-                      className="absolute top-2.5 right-2.5 px-3 py-1 rounded-[8px] bg-[#B09CFB] text-[#151617] text-xs font-bold border-2 border-[#151617] shadow-comic-sm flex items-center gap-1"
+                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-[36px] rounded-[8px] bg-[#B09CFB] text-[#151617] text-xs font-bold border-2 border-[#151617] shadow-comic-sm btn-press flex items-center gap-1"
                     >
                       {copiedMcp ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                       <span>{copiedMcp ? "Copied" : "Copy"}</span>
@@ -484,7 +488,7 @@ export default function StudioPage() {
               <div className="mt-8 flex justify-end">
                 <button
                   onClick={() => setShowEmbedModal(false)}
-                  className="px-6 py-2.5 rounded-[12px] bg-[#151617] text-[#FAFAF9] font-bold text-xs uppercase border-2 border-[#151617]"
+                  className="px-6 py-2.5 min-h-[44px] rounded-[10px] bg-[#151617] text-[#FAFAF9] font-bold text-xs uppercase border-2 border-[#151617] btn-press"
                 >
                   Done
                 </button>

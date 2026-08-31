@@ -12,6 +12,8 @@
   --offwhite: #F5F2F0;
   --mint: #4ECB71;
   --ink: #151617;
+  --radius-outer: 16px;
+  --radius-inner: 8px;
 }
 
 body {
@@ -20,6 +22,13 @@ body {
   font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Accessible focus styling */
+:focus-visible {
+  outline: 2px solid #151617;
+  outline-offset: 2px;
 }
 
 /* Comic / Claymorphic Utility Classes */
@@ -43,14 +52,18 @@ body {
   box-shadow: 6px 6px 0px 0px #151617;
 }
 
-/* Button Press Affordance */
+/* Purposeful Tactile Button Press (ui-skills & purposeful-ui-motion) */
+.btn-press {
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .btn-press:hover {
   transform: translate(-1px, -1px);
   box-shadow: 4px 4px 0px 0px #151617;
 }
 
 .btn-press:active {
-  transform: translate(2px, 2px);
+  transform: translate(2px, 2px) scale(0.98);
   box-shadow: 1px 1px 0px 0px #151617;
 }
 
@@ -65,6 +78,30 @@ body {
   background-image: linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
                     linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+/* Fast spinner for higher perceived performance (purposeful-ui-motion) */
+.animate-spin-fast {
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Accessibility: Respect Reduced Motion (purposeful-ui-motion Rule 7) */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Custom scrollbars */
