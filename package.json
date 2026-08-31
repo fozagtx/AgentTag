@@ -7,28 +7,29 @@
     "build": "next build",
     "start": "next start",
     "db:init": "node scripts/init-db.js",
-    "relay": "ts-node --transpile-only relay/server.ts",
+    "relay": "tsx relay/server.ts",
     "lint": "next lint"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.5",
+    "@types/node": "^20.16.11",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@types/ws": "^8.5.12",
     "clsx": "^2.1.1",
     "lucide-react": "^0.453.0",
     "next": "^14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.5.4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/node": "^20.16.11",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.0",
-    "@types/ws": "^8.5.12",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.13",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "tailwindcss": "^3.4.13"
   }
 }
