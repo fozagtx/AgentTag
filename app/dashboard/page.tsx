@@ -28,6 +28,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { SiteConfig } from "@/lib/types";
+import AgentGlobe from "@/components/AgentGlobe";
 
 interface TelemetryEvent {
   id: string;
@@ -340,6 +341,13 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* 3D Global Agent Network Command Center */}
+        {(activeTab === "overview" || activeTab === "telemetry") && (
+          <div className="mt-8">
+            <AgentGlobe variant="dashboard" showFeed={true} />
+          </div>
+        )}
 
         {/* Search / Filter Bar */}
         <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">

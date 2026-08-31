@@ -19,6 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import AgentGlobe from "@/components/AgentGlobe";
 
 export default function HomePage() {
   const router = useRouter();
@@ -379,13 +380,31 @@ export default function HomePage() {
           ───────────────────────────────────────────────────────────── */}
       <section id="developers" className="w-full bg-[#181818] text-[#FAFAF9] border-b-2 border-[#151617] py-24 px-6 sm:px-8 comic-grid-dark">
         <div className="max-w-[1280px] mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="text-center max-w-2xl mx-auto mb-12">
             <div className="inline-flex px-3 py-1 rounded-[9999px] bg-[#4ECB71] text-[#151617] border-2 border-white shadow-comic-sm font-mono text-xs font-bold uppercase mb-3">
               ZERO-INFRASTRUCTURE ARCHITECTURE
             </div>
             <h2 className="font-display text-4xl sm:text-5xl text-white uppercase tracking-tight text-balance">
-              CONNECT CLAUDE &amp; CURSOR IN SECONDS
+              LIVE GLOBAL AGENT NETWORK
             </h2>
+            <p className="text-sm font-medium text-white/70 mt-3 text-pretty max-w-xl mx-auto">
+              Watch Claude, Cursor, and autonomous buyer agents worldwide connect directly to WebMCP-enabled websites over ultra-low latency edge relays.
+            </p>
+          </div>
+
+          {/* 3D Dot-Matrix Interactive Globe */}
+          <div className="mb-16">
+            <AgentGlobe variant="hero" />
+          </div>
+
+          {/* Integration Terminals Header */}
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-tight">
+              CONNECT CLAUDE &amp; CURSOR IN SECONDS
+            </h3>
+            <p className="text-xs font-mono text-white/60 mt-1">
+              One embed script. One JSON block. Instant agent capabilities.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
