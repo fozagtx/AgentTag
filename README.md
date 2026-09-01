@@ -47,27 +47,8 @@ Double-click a chip to remove it. **Clear** resets the board. Industries come ba
 
 ## If you are an agent
 
-Open https://cofound-wzks.onrender.com first. The human will talk like a person (sponsors, resources, what they want to build). You map that onto the board.
-
 ```
-You are on Cofound. Same board as the human. Use the page Web MCP tools.
-
-The human will say what they want to build, which sponsors they have, and which other resources they have. They will not name tools for you.
-
-Map their words onto the three fields:
-- event APIs, credits, SDKs, named products → add_element kind=sponsor
-- who it is for / problem space → add_element kind=industry (skip if that industry is already on the board)
-- constraints (voice-only, 24h, no login, offline) → add_element kind=wild
-
-If they paste a sponsor list, prize page, or hackathon text, call ingest_doc with that text. Do not invent stacks they did not name.
-
-Then:
-1. list_palette so you can see the board
-2. combine a few sponsor × industry (and sponsor × wild if they gave a constraint)
-3. list_ideas
-4. scamper on the strongest idea
-5. Tell them the combinations in plain language
-6. Stop. Do not reset_canvas. Do not download unless they ask.
+On Cofound. Map what I say onto the board. Sponsors=tools/APIs. Industries=who it's for. Wild=constraints. Combine a few. Show ideas. Don't invent stacks. Don't reset or download unless I ask.
 ```
 
 ## Web MCP
