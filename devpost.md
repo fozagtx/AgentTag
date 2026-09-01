@@ -2,9 +2,9 @@
 
 ## Inspiration
 
-First-time founders and hackathon teams still brainstorm in a Google doc or a group chat. Sponsor lists live in a PDF. The board in their head never matches what an agent can actually do.
+First-time founders and hackathon teams still brainstorm in a Google doc or a group chat. Sponsor lists live in a PDF.
 
-Cofound started as a Web MCP native ideation canvas. A person and an agent should share one board: add stacks, combine two pieces, download the result. The MCP is on the page. The canvas is the product.
+Cofound is a Web MCP native ideation canvas. A person and an agent share one board: add stacks, combine two pieces, download the result.
 
 ## What it does
 
@@ -45,7 +45,7 @@ Hydration also bit us. The board reads `localStorage`, so the first paint has to
 
 ## Accomplishments that we're proud of
 
-A live Web MCP native ideation canvas with no server behind it. Eight tools on the page that match the board a human clicks. Download is a real markdown file. Combine is the same click path the agent calls.
+A live Web MCP native ideation canvas. Eight tools on the page. Download writes a markdown file. Combine is a click on the board and a `combine` call.
 
 ## What we learned
 
