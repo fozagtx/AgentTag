@@ -30,13 +30,13 @@ npm install
 npm run dev
 ```
 
-Open the URL Next prints (often [http://localhost:3000](http://localhost:3000)).
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Usage
 
 1. Put stacks in the fields (type, drop a doc, or let an agent add them).
 2. Click one piece, then another, to combine them.
-3. Optional: **Push with SCAMPER**.
+3. **Push with SCAMPER**.
 4. **Download**.
 
 Double-click a piece to remove it. **Clear** resets the board. Industries come back as the starter set.
