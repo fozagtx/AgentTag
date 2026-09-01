@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Aurora from "@/components/Aurora";
-import { BrandMark, DiamondMark } from "@/components/BrandMark";
+import { BrandMark } from "@/components/BrandMark";
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -72,10 +72,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         <div className="max-w-[1120px] mx-auto px-6">
           <div className="flex flex-col gap-8 pb-12 md:flex-row md:items-start md:justify-between">
             <div className="space-y-4 max-w-sm">
-              <div className="flex items-center gap-2">
-                <DiamondMark />
-                <span className="text-sm font-semibold">AgentTag</span>
-              </div>
+              <BrandMark />
               <p className="text-sm text-[#9c9c9d] leading-relaxed">
                 One script tag so agents can read, search, and act on your live site.
               </p>

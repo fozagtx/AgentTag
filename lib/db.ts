@@ -163,11 +163,15 @@ export async function getAllSiteConfigs(): Promise<SiteConfig[]> {
 
 export async function deleteSiteConfig(siteId: string): Promise<boolean> {
   memoryStore.delete(siteId);
+  for (let i = telemetryStore.length - 1; i >= 0; i--) {
+    if (telemetryStore[i].site_id === siteId) telemetryStore.splice(i, 1);
+  }
 
   const p = getPool();
   if (p) {
     try {
       await ensureTables();
+      await p.query(`DELETE FROM telemetry_events WHERE site_id = $1`, [siteId]);
       await p.query(`DELETE FROM site_configs WHERE site_id = $1`, [siteId]);
       return true;
     } catch (err) {

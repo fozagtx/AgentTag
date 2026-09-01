@@ -219,20 +219,40 @@ body {
   to { transform: rotate(360deg); }
 }
 
+.app-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .app-main.is-ready {
+    transition: margin-left var(--rail-open-dur) var(--rail-ease);
+  }
+  .app-main {
+    margin-left: 3.5rem;
+  }
+  .app-main.is-rail-open {
+    margin-left: 15rem;
+  }
+}
+
 .app-rail {
   position: fixed;
-  top: 3.5rem;
+  top: 0;
   bottom: 0;
   left: 0;
   z-index: 40;
   display: flex;
   width: 15rem;
   flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  background: #0c0d0f;
+  overflow: hidden;
+  border-right: 1px solid #e8e8e4;
+  background: #f4f4f2;
   transform: translateX(-100%);
   pointer-events: none;
-  will-change: transform;
 }
 
 .app-rail.is-ready {
@@ -248,14 +268,25 @@ body {
   transition-duration: var(--rail-open-dur);
 }
 
+@media (min-width: 768px) {
+  .app-rail {
+    transform: translateX(0);
+    pointer-events: auto;
+    width: 3.5rem;
+  }
+  .app-rail.is-ready {
+    transition: width var(--rail-open-dur) var(--rail-ease);
+  }
+  .app-rail.is-open {
+    width: 15rem;
+  }
+}
+
 .app-rail-scrim {
   position: fixed;
-  top: 3.5rem;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   z-index: 30;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   pointer-events: none;
   will-change: opacity;
@@ -272,6 +303,12 @@ body {
 
 .app-rail-scrim.is-ready.is-open {
   transition-duration: var(--rail-open-dur);
+}
+
+@media (min-width: 768px) {
+  .app-rail-scrim {
+    display: none;
+  }
 }
 
 .t-modal {
@@ -317,6 +354,7 @@ body {
   }
   .app-rail,
   .app-rail-scrim,
+  .app-main,
   .t-modal,
   .t-modal-scrim {
     transition: none !important;

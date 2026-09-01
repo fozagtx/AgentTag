@@ -1,3 +1,4 @@
+import { decodeHtml } from "./text";
 import { CrawlResult } from "./types";
 
 export class CrawlError extends Error {
@@ -172,15 +173,7 @@ export function hasBooking(lower: string): boolean {
 }
 
 function decodeEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, "\"")
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
+  return decodeHtml(text);
 }
 
 function htmlToCleanMarkdown(rawHtml: string): string {

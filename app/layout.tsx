@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   title: "AgentTag | Launch your product to millions of agents",
   description:
     "Paste your URL, generate Web MCP tools, and embed one script tag so Claude, Cursor, and buyer agents can read, search, and act on your site.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

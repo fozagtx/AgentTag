@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import createGlobe from "cobe";
-import type { Globe as CobeGlobe } from "cobe";
 import { Globe as GlobeIcon, Radio } from "lucide-react";
 import { TelemetryEvent } from "@/lib/types";
+import { decodeHtml } from "@/lib/text";
 
 function relativeTime(iso: string) {
   const then = new Date(iso).getTime();
@@ -19,6 +18,26 @@ function relativeTime(iso: string) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+type Vec3 = { x: number; y: number; z: number };
+
+function fibonacciSphere(count: number): Vec3[] {
+  const points: Vec3[] = [];
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < count; i++) {
+    const y = 1 - (i / (count - 1)) * 2;
+    const radius = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = golden * i;
+    points.push({
+      x: Math.cos(theta) * radius,
+      y,
+      z: Math.sin(theta) * radius,
+    });
+  }
+  return points;
+}
+
+const DOTS = fibonacciSphere(1400);
+
 export default function AgentGlobe({
   className = "",
   events: eventsProp,
@@ -27,8 +46,10 @@ export default function AgentGlobe({
   events?: TelemetryEvent[];
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pointerInteracting = useRef<number | null>(null);
-  const pointerInteractionMovement = useRef(0);
+  const dragging = useRef(false);
+  const lastX = useRef(0);
+  const rotY = useRef(0.4);
+  const rotX = useRef(0.35);
   const [fetchedEvents, setFetchedEvents] = useState<TelemetryEvent[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -61,58 +82,74 @@ export default function AgentGlobe({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    let globe: CobeGlobe | null = null;
-    let animationFrameId = 0;
-    let phi = 4.8;
-    const canvasWidth = canvas.offsetWidth || 500;
+    let frame = 0;
+    let running = true;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    try {
-      globe = createGlobe(canvas, {
-        devicePixelRatio: 2,
-        width: canvasWidth * 2,
-        height: canvasWidth * 2,
-        phi,
-        theta: 0.3,
-        dark: 1,
-        diffuse: 1.4,
-        mapSamples: 18000,
-        mapBrightness: 6,
-        baseColor: [0.15, 0.16, 0.18],
-        markerColor: [0.3, 0.8, 0.44],
-        glowColor: [0.08, 0.1, 0.12],
-        markers: [],
-      });
-
-      const animate = () => {
-        if (globe) {
-          if (pointerInteracting.current === null) {
-            phi += 0.003;
-          } else {
-            phi += pointerInteractionMovement.current;
-            pointerInteractionMovement.current = 0;
-          }
-          globe.update({ phi, markers: [] });
-        }
-        animationFrameId = requestAnimationFrame(animate);
-      };
-      animate();
-    } catch (err) {
-      console.error("Failed to initialize WebGL globe:", err);
-    }
-
-    const onResize = () => {
-      if (canvas && globe) {
-        const newWidth = canvas.offsetWidth || 500;
-        globe.update({ width: newWidth * 2, height: newWidth * 2 });
+    const paint = () => {
+      if (!running) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const size = canvas.clientWidth || 460;
+      if (canvas.width !== size * dpr || canvas.height !== size * dpr) {
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
       }
-    };
-    window.addEventListener("resize", onResize);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size, size);
 
+      const cx = size / 2;
+      const cy = size / 2;
+      const radius = size * 0.38;
+
+      if (!dragging.current && !reduceMotion) {
+        rotY.current += 0.004;
+      }
+
+      const cosY = Math.cos(rotY.current);
+      const sinY = Math.sin(rotY.current);
+      const cosX = Math.cos(rotX.current);
+      const sinX = Math.sin(rotX.current);
+
+      const halo = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius * 1.35);
+      halo.addColorStop(0, "rgba(255, 107, 74, 0.14)");
+      halo.addColorStop(1, "rgba(255, 107, 74, 0)");
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 1.35, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#0a0b0d";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      for (const p of DOTS) {
+        const x1 = p.x * cosY + p.z * sinY;
+        const z1 = -p.x * sinY + p.z * cosY;
+        const y2 = p.y * cosX - z1 * sinX;
+        const z2 = p.y * sinX + z1 * cosX;
+        if (z2 < -0.02) continue;
+        const depth = (z2 + 1) / 2;
+        const px = cx + x1 * radius;
+        const py = cy + y2 * radius;
+        const alpha = 0.18 + depth * 0.72;
+        const dot = 0.7 + depth * 1.35;
+        ctx.fillStyle = `rgba(255, ${Math.round(107 + depth * 72)}, ${Math.round(74 + depth * 40)}, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, dot, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      frame = requestAnimationFrame(paint);
+    };
+
+    frame = requestAnimationFrame(paint);
     return () => {
-      window.removeEventListener("resize", onResize);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (globe) globe.destroy();
+      running = false;
+      cancelAnimationFrame(frame);
     };
   }, []);
 
@@ -120,11 +157,9 @@ export default function AgentGlobe({
     <div
       className={`relative w-full rounded-[14px] bg-[#0c0d0f] border border-white/10 overflow-hidden text-white ${className}`}
     >
-      <div className="absolute inset-0 pointer-events-none" />
-
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6 border-b border-white/10 bg-[#151617]/80">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[10px] bg-[#4ECB71]/10 border border-[#4ECB71]/40 flex items-center justify-center text-[#4ECB71]">
+          <div className="w-10 h-10 rounded-[10px] bg-[rgba(255,107,74,0.12)] border border-[rgba(255,107,74,0.35)] flex items-center justify-center text-[#ff6b4a]">
             <Radio className="h-5 w-5" />
           </div>
           <div>
@@ -141,32 +176,30 @@ export default function AgentGlobe({
       <div className="relative grid grid-cols-1 lg:grid-cols-12 min-h-[540px] items-center p-4 sm:p-8 gap-8">
         <div className="lg:col-span-7 flex flex-col items-center justify-center relative select-none">
           <div className="relative w-full max-w-[460px] aspect-square flex items-center justify-center">
-            <div className="absolute inset-4 rounded-full bg-[#4ECB71]/10 blur-3xl pointer-events-none" />
             <canvas
               ref={canvasRef}
               onPointerDown={(e) => {
-                pointerInteracting.current = e.clientX - pointerInteractionMovement.current;
+                dragging.current = true;
+                lastX.current = e.clientX;
+                canvasRef.current?.setPointerCapture(e.pointerId);
                 if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
               }}
-              onPointerUp={() => {
-                pointerInteracting.current = null;
+              onPointerUp={(e) => {
+                dragging.current = false;
+                canvasRef.current?.releasePointerCapture(e.pointerId);
                 if (canvasRef.current) canvasRef.current.style.cursor = "grab";
               }}
-              onPointerOut={() => {
-                pointerInteracting.current = null;
-                if (canvasRef.current) canvasRef.current.style.cursor = "grab";
-              }}
-              onMouseMove={(e) => {
-                if (pointerInteracting.current !== null) {
-                  const delta = e.clientX - pointerInteracting.current;
-                  pointerInteractionMovement.current = delta * 0.005;
-                }
+              onPointerMove={(e) => {
+                if (!dragging.current) return;
+                const dx = e.clientX - lastX.current;
+                lastX.current = e.clientX;
+                rotY.current += dx * 0.008;
               }}
               className="w-full h-full cursor-grab active:cursor-grabbing"
               style={{ width: "100%", height: "100%", aspectRatio: "1 / 1" }}
             />
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-[9999px] bg-[#151617]/90 border border-white/10 text-[11px] font-mono text-white/60 pointer-events-none flex items-center gap-1.5">
-              <GlobeIcon className="h-3.5 w-3.5 text-[#4ECB71]" />
+              <GlobeIcon className="h-3.5 w-3.5 text-[#ff6b4a]" />
               <span>Drag to rotate</span>
             </div>
           </div>
@@ -178,46 +211,46 @@ export default function AgentGlobe({
               <p className="text-sm text-white/60">No calls yet.</p>
             </div>
           ) : (
-          <div className="p-6 rounded-[16px] bg-[#151617] border-2 border-[#4ECB71]/40 ring-1 ring-white/10">
-                <div className="flex items-start justify-between pb-4 border-b border-white/10">
-                  <div>
-                    <div className="text-[11px] font-mono uppercase tracking-wider text-[#4ECB71] font-bold">
-                      Last recorded call
-                    </div>
-                    <h4 className="font-display text-xl text-white mt-0.5">{active.tool_name}</h4>
+            <div className="p-6 rounded-[16px] bg-[#151617] border border-[rgba(255,107,74,0.35)]">
+              <div className="flex items-start justify-between pb-4 border-b border-white/10">
+                <div>
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-[#ff6b4a] font-bold">
+                    Last recorded call
                   </div>
-                  <span className="px-2.5 py-1 rounded-[6px] bg-[#1F2023] border border-white/10 text-[11px] font-mono font-bold text-[#FFBE98] tabular-nums">
-                    {active.duration_ms > 0 ? `${active.duration_ms}ms` : "—"}
-                  </span>
+                  <h4 className="text-xl text-white mt-0.5">{active.tool_name}</h4>
                 </div>
-                <div className="mt-4 space-y-3 text-sm">
-                  <div>
-                    <span className="text-[10px] font-mono uppercase text-white/50 block font-semibold">Client</span>
-                    <div className="font-semibold text-white mt-0.5">{active.client_type}</div>
+                <span className="px-2.5 py-1 rounded-[6px] bg-[#1F2023] border border-white/10 text-[11px] font-mono font-bold text-[#ffb347] tabular-nums">
+                  {active.duration_ms > 0 ? `${active.duration_ms}ms` : "—"}
+                </span>
+              </div>
+              <div className="mt-4 space-y-3 text-sm">
+                <div>
+                  <span className="text-[10px] font-mono uppercase text-white/50 block font-semibold">Client</span>
+                  <div className="font-semibold text-white mt-0.5">{active.client_type}</div>
+                </div>
+                <div className="p-3.5 rounded-[10px] bg-[#0A0B0C] border border-white/10 font-mono text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                    <span className="text-white/50">Site</span>
+                    <span className="text-[#ff6b4a]">{decodeHtml(active.site_title)}</span>
                   </div>
-                  <div className="p-3.5 rounded-[10px] bg-[#0A0B0C] border border-white/10 font-mono text-xs">
-                    <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                      <span className="text-white/50">Site</span>
-                      <span className="text-[#4ECB71]">{active.site_title}</span>
-                    </div>
-                    <div className="mt-2.5 text-[#FFBE98] break-all">
-                      {active.tool_name}({JSON.stringify(active.args)})
-                    </div>
-                    <div className="mt-2 pt-2 border-t border-white/5 text-white/50 flex justify-between">
-                      <span>{relativeTime(active.created_at)}</span>
-                      <span className="text-[#4ECB71] font-bold">{active.status}</span>
-                    </div>
+                  <div className="mt-2.5 text-[#ffb347] break-all">
+                    {active.tool_name}({JSON.stringify(active.args)})
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-white/5 text-white/50 flex justify-between">
+                    <span>{relativeTime(active.created_at)}</span>
+                    <span className="text-[#ff6b4a] font-bold">{active.status}</span>
                   </div>
                 </div>
-          </div>
+              </div>
+            </div>
           )}
 
           {events.length > 0 ? (
-          <div className="p-4 rounded-[16px] bg-[#151617] border border-white/10">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-xs font-medium text-white/80">Recent</span>
-              <span className="text-[10px] font-mono text-white/40 tabular-nums">{events.length}</span>
-            </div>
+            <div className="p-4 rounded-[16px] bg-[#151617] border border-white/10">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <span className="text-xs font-medium text-white/80">Recent</span>
+                <span className="text-[10px] font-mono text-white/40 tabular-nums">{events.length}</span>
+              </div>
               <div className="space-y-2">
                 {events.slice(0, 5).map((evt, idx) => (
                   <button
@@ -225,14 +258,14 @@ export default function AgentGlobe({
                     type="button"
                     onClick={() => setSelectedIndex(idx)}
                     className={`w-full text-left p-2.5 rounded-[8px] bg-[#0A0B0C] border flex items-center justify-between text-xs font-mono transition-colors duration-150 ${
-                      idx === selectedIndex ? "border-[#4ECB71]/50" : "border-white/5"
+                      idx === selectedIndex ? "border-[rgba(255,107,74,0.5)]" : "border-white/5"
                     }`}
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#4ECB71]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b4a]" />
                       <span className="text-white font-semibold truncate">{evt.client_type}</span>
                       <span className="text-white/40">→</span>
-                      <span className="text-[#FFBE98] truncate">{evt.tool_name}</span>
+                      <span className="text-[#ffb347] truncate">{evt.tool_name}</span>
                     </div>
                     <span className="text-white/40 text-[10px] flex-shrink-0 ml-2">
                       {relativeTime(evt.created_at)}
@@ -240,7 +273,7 @@ export default function AgentGlobe({
                   </button>
                 ))}
               </div>
-          </div>
+            </div>
           ) : null}
         </div>
       </div>

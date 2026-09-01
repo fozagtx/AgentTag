@@ -1,8 +1,12 @@
-# Render Blueprint: AgentTag Web Service + Cloud Relay
+# Render Blueprint: AgentTag web + relay
 # Docs: https://render.com/docs/blueprint-spec
+#
+# Shared secrets live in one Environment Group named `agenttag`.
+# Create that group in the Render dashboard and paste DATABASE_URL
+# and FIRECRAWL_API_KEY once. Do not put those values in this file
+# (Render ignores sync:false inside env groups).
 
 services:
-  # 1. AgentTag Main Web App & Dashboard (Next.js 14)
   - type: web
     name: agenttag-web
     runtime: node
@@ -11,18 +15,14 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm run start
     envVars:
+      - fromGroup: agenttag
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        sync: false # Set your Neon Serverless Postgres Connection String in Render dashboard
-      - key: FIRECRAWL_API_KEY
-        sync: false # Optional: Set your Firecrawl API key
       - key: NEXT_PUBLIC_RELAY_URL
         value: https://agenttag-relay.onrender.com
       - key: NEXT_PUBLIC_CDN_URL
         value: https://agenttag-web.onrender.com
 
-  # 2. AgentTag Cloud Relay (Real-time WebSockets & SSE for Claude / Cursor)
   - type: web
     name: agenttag-relay
     runtime: node
@@ -31,9 +31,8 @@ services:
     buildCommand: npm install
     startCommand: npm run relay
     envVars:
+      - fromGroup: agenttag
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        sync: false # Same Neon Database connection string
       - key: PORT
-        value: 10000
+        value: "10000"

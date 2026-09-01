@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
+import { decodeHtml } from "@/lib/text";
 
 export default function StudioPage() {
   const params = useParams();
@@ -140,9 +141,9 @@ export default function StudioPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#07080a] text-[#9c9c9d] flex flex-col">
-        <header className="flex h-14 items-center gap-3 border-b border-white/10 px-4">
-          <BrandMark href="/dashboard" />
+      <div className="min-h-screen bg-[#f7f7f5] text-[#6f6f6f] flex flex-col">
+        <header className="flex h-14 items-center gap-3 border-b border-[#e8e8e4] px-4">
+          <BrandMark href="/dashboard" light />
         </header>
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm">Loading...</p>
@@ -153,14 +154,14 @@ export default function StudioPage() {
 
   if (!config) {
     return (
-      <div className="min-h-screen bg-[#07080a] text-white flex flex-col">
-        <header className="flex h-14 items-center gap-3 border-b border-white/10 px-4">
-          <BrandMark href="/dashboard" />
+      <div className="min-h-screen bg-[#f7f7f5] text-[#161616] flex flex-col">
+        <header className="flex h-14 items-center gap-3 border-b border-[#e8e8e4] px-4">
+          <BrandMark href="/dashboard" light />
         </header>
         <div className="flex-1 flex items-center justify-center p-6">
-        <div className="max-w-md w-full rounded-[14px] border border-white/10 bg-white/[0.03] p-8 text-center">
+        <div className="max-w-md w-full rounded-[14px] border border-[#e8e8e4] bg-white p-8 text-center">
           <h2 className="text-xl font-semibold">Site not found</h2>
-          <p className="text-sm text-[#9c9c9d] mt-2">This site is not in your list.</p>
+          <p className="text-sm text-[#6f6f6f] mt-2">This site is not in your list.</p>
           <Link href="/dashboard" className="btn-keycap mt-6 inline-flex h-9 items-center px-4 text-xs">
             Back to dashboard
           </Link>
@@ -184,28 +185,28 @@ export default function StudioPage() {
   );
 
   return (
-    <div className="w-full min-h-screen bg-[#07080a] text-white">
-      <header className="flex h-14 items-center gap-3 border-b border-white/10 px-4">
-        <BrandMark href="/dashboard" />
+    <div className="w-full min-h-screen bg-[#f7f7f5] text-[#161616]">
+      <header className="flex h-14 items-center gap-3 border-b border-[#e8e8e4] px-4">
+        <BrandMark href="/dashboard" light />
       </header>
       <div className="max-w-[1280px] mx-auto py-10 px-4 sm:px-8">
-        <div className="p-6 sm:p-8 rounded-[14px] bg-white/[0.03] border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="p-6 sm:p-8 rounded-[14px] bg-white border border-[#e8e8e4] flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
               <Link
                 href="/dashboard"
-                className="p-2.5 min-h-11 min-w-11 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors duration-150"
+                className="p-2.5 min-h-11 min-w-11 rounded-lg bg-white/5 hover:bg-white/10 border border-[#e8e8e4] flex items-center justify-center transition-colors duration-150"
                 aria-label="Back to dashboard"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-semibold truncate">{config.title}</h1>
+              <h1 className="text-2xl sm:text-3xl font-semibold truncate">{decodeHtml(config.title)}</h1>
             </div>
             <a
               href={config.url}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex items-center gap-1 text-xs font-mono text-[#9c9c9d] hover:text-white"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-mono text-[#6f6f6f] hover:text-[#161616]"
             >
               <span className="truncate">{config.url}</span>
               <ExternalLink className="h-3.5 w-3.5 shrink-0" />
@@ -226,7 +227,7 @@ export default function StudioPage() {
           <div className="lg:col-span-7 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Tools</h2>
-              <span className="text-xs text-[#9c9c9d] tabular-nums">
+              <span className="text-xs text-[#6f6f6f] tabular-nums">
                 {config.tools.filter((t) => t.is_enabled).length} on
               </span>
             </div>
@@ -235,7 +236,7 @@ export default function StudioPage() {
               {config.tools.map((tool) => (
                 <div
                   key={tool.id}
-                  className={`p-5 rounded-[14px] border border-white/10 bg-white/[0.03] ${
+                  className={`p-5 rounded-[14px] border border-[#e8e8e4] bg-white ${
                     tool.is_enabled ? "" : "opacity-50"
                   }`}
                 >
@@ -244,18 +245,18 @@ export default function StudioPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-sm">{tool.name}</span>
                         {tool.requires_approval ? (
-                          <span className="text-[11px] px-2 py-0.5 rounded-md border border-white/10 text-[#9c9c9d]">
+                          <span className="text-[11px] px-2 py-0.5 rounded-md border border-[#e8e8e4] text-[#6f6f6f]">
                             Needs confirmation
                           </span>
                         ) : null}
                       </div>
-                      <p className="text-sm text-[#9c9c9d] mt-2">{tool.description}</p>
+                      <p className="text-sm text-[#6f6f6f] mt-2">{tool.description}</p>
                       <div className="flex flex-wrap gap-1.5 mt-3">
                         {Object.entries(tool.parameters.properties || {}).map(
                           ([paramName, prop]: [string, any]) => (
                             <span
                               key={paramName}
-                              className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 font-mono text-[11px] text-[#9c9c9d]"
+                              className="px-2 py-0.5 rounded-md bg-white/5 border border-[#e8e8e4] font-mono text-[11px] text-[#6f6f6f]"
                             >
                               {paramName}
                               {prop?.type ? `: ${prop.type}` : ""}
@@ -273,14 +274,14 @@ export default function StudioPage() {
                       {tool.is_enabled ? (
                         <ToggleRight className="h-8 w-8 text-[#ff6b4a]" />
                       ) : (
-                        <ToggleLeft className="h-8 w-8 text-[#9c9c9d]" />
+                        <ToggleLeft className="h-8 w-8 text-[#6f6f6f]" />
                       )}
                     </button>
                   </div>
 
                   <button
                     onClick={() => setExpandedSchema(expandedSchema === tool.id ? null : tool.id)}
-                    className="mt-3 flex items-center gap-1 text-[11px] text-[#9c9c9d] hover:text-white"
+                    className="mt-3 flex items-center gap-1 text-[11px] text-[#6f6f6f] hover:text-[#161616]"
                     type="button"
                   >
                     {expandedSchema === tool.id ? "Hide parameters" : "Parameters"}
@@ -291,7 +292,7 @@ export default function StudioPage() {
                     )}
                   </button>
                   {expandedSchema === tool.id ? (
-                    <pre className="mt-3 p-4 rounded-lg bg-[#0c0d0f] text-[#9c9c9d] text-[11px] font-mono border border-white/10 overflow-x-auto">
+                    <pre className="mt-3 p-4 rounded-lg bg-[#0c0d0f] text-[#6f6f6f] text-[11px] font-mono border border-[#e8e8e4] overflow-x-auto">
                       {JSON.stringify(tool.parameters, null, 2)}
                     </pre>
                   ) : null}
@@ -301,14 +302,14 @@ export default function StudioPage() {
 
             <form
               onSubmit={handleAddTool}
-              className="p-5 rounded-[14px] border border-white/10 bg-white/[0.03] flex flex-col sm:flex-row gap-2"
+              className="p-5 rounded-[14px] border border-[#e8e8e4] bg-white flex flex-col sm:flex-row gap-2"
             >
               <input
                 type="text"
                 value={newToolPrompt}
                 onChange={(e) => setNewToolPrompt(e.target.value)}
                 placeholder="Describe a tool to add"
-                className="flex-1 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-[#9c9c9d] focus:outline-none min-h-11"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-white/5 border border-[#e8e8e4] text-sm text-[#161616] placeholder:text-[#8a8a8a] focus:outline-none min-h-11"
               />
               <button
                 type="submit"
@@ -322,21 +323,21 @@ export default function StudioPage() {
           </div>
 
           <div className="lg:col-span-5">
-            <div className="p-6 rounded-[14px] bg-white/[0.03] border border-white/10 sticky top-8">
-              <div className="flex items-center gap-2 pb-4 border-b border-white/10">
-                <Terminal className="h-4 w-4 text-[#9c9c9d]" />
+            <div className="p-6 rounded-[14px] bg-white border border-[#e8e8e4] sticky top-8">
+              <div className="flex items-center gap-2 pb-4 border-b border-[#e8e8e4]">
+                <Terminal className="h-4 w-4 text-[#6f6f6f]" />
                 <h3 className="text-base font-semibold">Try a tool</h3>
               </div>
 
               <div className="mt-4">
-                <label className="block text-xs text-[#9c9c9d] mb-1.5">Tool</label>
+                <label className="block text-xs text-[#6f6f6f] mb-1.5">Tool</label>
                 <select
                   value={selectedTool}
                   onChange={(e) => {
                     setSelectedTool(e.target.value);
                     setToolArgs({});
                   }}
-                  className="w-full px-3 py-2.5 rounded-lg bg-[#0c0d0f] border border-white/10 text-sm text-white focus:outline-none min-h-11"
+                  className="w-full px-3 py-2.5 rounded-lg bg-[#0c0d0f] border border-[#e8e8e4] text-sm text-[#161616] focus:outline-none min-h-11"
                 >
                   {config.tools
                     .filter((t) => t.is_enabled)
@@ -354,13 +355,13 @@ export default function StudioPage() {
                     config.tools.find((t) => t.name === selectedTool)?.parameters.properties || {}
                   ).map(([paramName, prop]: [string, any]) => (
                     <div key={paramName}>
-                      <label className="block text-[11px] text-[#9c9c9d] mb-1">{paramName}</label>
+                      <label className="block text-[11px] text-[#6f6f6f] mb-1">{paramName}</label>
                       <input
                         type="text"
                         placeholder={prop.description || paramName}
                         value={toolArgs[paramName] || ""}
                         onChange={(e) => setToolArgs({ ...toolArgs, [paramName]: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none min-h-10"
+                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-[#e8e8e4] text-sm text-[#161616] focus:outline-none min-h-10"
                       />
                     </div>
                   ))}
@@ -387,7 +388,7 @@ export default function StudioPage() {
               </button>
 
               {simulationResult ? (
-                <pre className="mt-5 p-4 rounded-lg bg-[#0c0d0f] text-[#9c9c9d] font-mono text-[11px] border border-white/10 max-h-64 overflow-y-auto">
+                <pre className="mt-5 p-4 rounded-lg bg-[#0c0d0f] text-[#6f6f6f] font-mono text-[11px] border border-[#e8e8e4] max-h-64 overflow-y-auto">
                   {JSON.stringify(simulationResult, null, 2)}
                 </pre>
               ) : null}
@@ -398,16 +399,16 @@ export default function StudioPage() {
         {showEmbedModal ? (
           <div className="t-modal-scrim is-open" onClick={() => setShowEmbedModal(false)}>
             <div
-              className="t-modal is-open bg-[#0c0d0f] border border-white/10 rounded-[14px] max-w-2xl w-full p-6 sm:p-8"
+              className="t-modal is-open bg-white text-[#161616] border border-[#e8e8e4] rounded-[14px] max-w-2xl w-full p-6 sm:p-8"
               role="dialog"
               aria-modal="true"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center justify-between pb-4 border-b border-[#e8e8e4]">
                 <h3 className="text-lg font-semibold">Script tag</h3>
                 <button
                   onClick={() => setShowEmbedModal(false)}
-                  className="text-sm text-[#9c9c9d] hover:text-white"
+                  className="text-sm text-[#6f6f6f] hover:text-[#161616]"
                   type="button"
                 >
                   Close
@@ -416,9 +417,9 @@ export default function StudioPage() {
 
               <div className="mt-6 space-y-6">
                 <div>
-                  <div className="text-xs text-[#9c9c9d] mb-2">Paste into your site</div>
+                  <div className="text-xs text-[#6f6f6f] mb-2">Paste into your site</div>
                   <div className="relative">
-                    <pre className="p-4 rounded-lg bg-white/5 text-white font-mono text-xs overflow-x-auto border border-white/10">
+                    <pre className="p-4 rounded-lg bg-white/5 text-[#161616] font-mono text-xs overflow-x-auto border border-[#e8e8e4]">
                       {scriptTagCode}
                     </pre>
                     <button
@@ -427,7 +428,7 @@ export default function StudioPage() {
                         setCopiedScript(true);
                         setTimeout(() => setCopiedScript(false), 2000);
                       }}
-                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-9 rounded-md bg-white/10 text-xs border border-white/10 flex items-center gap-1"
+                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-9 rounded-md bg-white/10 text-xs border border-[#e8e8e4] flex items-center gap-1"
                       type="button"
                     >
                       {copiedScript ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -437,9 +438,9 @@ export default function StudioPage() {
                 </div>
 
                 <div>
-                  <div className="text-xs text-[#9c9c9d] mb-2">Claude Desktop config</div>
+                  <div className="text-xs text-[#6f6f6f] mb-2">Claude Desktop config</div>
                   <div className="relative">
-                    <pre className="p-4 rounded-lg bg-[#07080a] text-[#9c9c9d] font-mono text-xs overflow-x-auto border border-white/10">
+                    <pre className="p-4 rounded-lg bg-[#f7f7f5] text-[#6f6f6f] font-mono text-xs overflow-x-auto border border-[#e8e8e4]">
                       {claudeConfigJson}
                     </pre>
                     <button
@@ -448,7 +449,7 @@ export default function StudioPage() {
                         setCopiedMcp(true);
                         setTimeout(() => setCopiedMcp(false), 2000);
                       }}
-                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-9 rounded-md bg-white/10 text-xs border border-white/10 flex items-center gap-1"
+                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-9 rounded-md bg-white/10 text-xs border border-[#e8e8e4] flex items-center gap-1"
                       type="button"
                     >
                       {copiedMcp ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}

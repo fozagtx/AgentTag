@@ -1,6 +1,8 @@
 import http from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { getSiteConfig } from "../lib/db";
+import { crawlUrl } from "../lib/firecrawl";
+import { runToolAgainstSnapshot } from "../lib/run-tool";
 
 const PORT = parseInt(process.env.PORT || "10000", 10);
 
@@ -158,7 +160,6 @@ async function handleMcpRpc(siteId: string, request: any): Promise<any> {
     const toolName = params?.name;
     const args = params?.arguments || {};
 
-    // 1. If active browser tab is connected, route to browser
     const tabs = activeBrowserTabs.get(siteId);
     if (tabs && tabs.size > 0) {
       const activeWs = Array.from(tabs)[0];
@@ -166,11 +167,8 @@ async function handleMcpRpc(siteId: string, request: any): Promise<any> {
         return new Promise((resolve) => {
           const correlationId = Math.random().toString(36);
           const timeout = setTimeout(() => {
-            resolve({
-              jsonrpc: "2.0",
-              id,
-              result: { content: [{ type: "text", text: `Tool ${toolName} executed via fallback.` }] },
-            });
+            activeWs.off("message", messageHandler);
+            resolve(runHeadlessTool(id, siteId, toolName, args));
           }, 5000);
 
           const messageHandler = (data: any) => {
@@ -194,25 +192,70 @@ async function handleMcpRpc(siteId: string, request: any): Promise<any> {
       }
     }
 
-    // 2. Headless offline execution fallback
-    return {
-      jsonrpc: "2.0",
-      id,
-      result: {
-        content: [
-          {
-            type: "text",
-            text: `[WebMCP Headless] Executed ${toolName} on ${config?.title || siteId} with params: ${JSON.stringify(args)}`,
-          },
-        ],
-      },
-    };
+    return runHeadlessTool(id, siteId, toolName, args);
   }
 
   return {
     jsonrpc: "2.0",
     id,
     error: { code: -32601, message: `Method ${method} not found` },
+  };
+}
+
+async function runHeadlessTool(
+  id: any,
+  siteId: string,
+  toolName: string,
+  args: Record<string, any>
+) {
+  const config = await getSiteConfig(siteId);
+  if (!config) {
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: { code: -32004, message: "Site not found" },
+    };
+  }
+
+  const tool = config.tools.find((t) => t.name === toolName && t.is_enabled);
+  if (!tool) {
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: { code: -32602, message: `Tool ${toolName} is not on this site.` },
+    };
+  }
+
+  let markdown = config.markdown_snapshot || "";
+  try {
+    const live = await crawlUrl(config.url);
+    if (live.markdown) markdown = live.markdown;
+  } catch (err) {
+    console.error("[Relay] Live read failed, using stored snapshot:", err);
+  }
+
+  if (!markdown) {
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: { code: -32002, message: "Could not read this site." },
+    };
+  }
+
+  const result = runToolAgainstSnapshot(
+    tool.name,
+    tool.execution_type,
+    args,
+    markdown,
+    config.url
+  );
+
+  return {
+    jsonrpc: "2.0",
+    id,
+    result: {
+      content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+    },
   };
 }
 

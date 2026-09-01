@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Briefcase,
-  Check,
-  Copy,
   Cpu,
   Search,
   ShoppingBag,
@@ -20,7 +18,6 @@ export default function HomePage() {
   const router = useRouter();
   const [url, setUrl] = useState("https://docs.stripe.com");
   const [isLoading, setIsLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const handleAnalyze = async (targetUrl?: string) => {
     const finalUrl = targetUrl || url;
@@ -45,12 +42,6 @@ export default function HomePage() {
     }
   };
 
-  const copyEmbed = async () => {
-    await navigator.clipboard.writeText(EMBED);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
-  };
-
   return (
     <div className="w-full">
       <section className="relative min-h-[100svh] flex flex-col items-center px-5 pt-10 pb-16 sm:pt-16">
@@ -67,20 +58,6 @@ export default function HomePage() {
 
           <p className="mt-5 max-w-[640px] text-[18px] font-normal leading-relaxed tracking-[0.2px] text-[#c8c8c8]">
             Paste a URL. AgentTag reads the live page and registers only the tools that page actually supports.
-          </p>
-
-          <div className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row">
-            <Link href="/dashboard" className="btn-keycap inline-flex items-center justify-center gap-2">
-              Open Dashboard
-            </Link>
-            <button type="button" onClick={copyEmbed} className="btn-keycap inline-flex items-center justify-center gap-2">
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied script tag" : "Copy script tag"}
-            </button>
-          </div>
-
-          <p className="mt-4 font-mono text-[12px] text-[#9c9c9d]">
-            {EMBED}
           </p>
         </div>
 
