@@ -45,10 +45,13 @@ You are looking at three columns.
 
 Double-click a chip to remove it. **Clear** resets the board. Industries come back.
 
-## If you are an agent
+## Use it in Codex
+
+1. Open https://cofound-wzks.onrender.com in Codex.
+2. Paste:
 
 ```
-On Cofound. Map what I say onto the board. Sponsors=tools/APIs. Industries=who it's for. Wild=constraints. Combine a few. Show ideas. Don't invent stacks. Don't reset or download unless I ask.
+Sponsors: Twilio, Groq. For Health. Weekend only. Put them on the board and combine.
 ```
 
 ## Web MCP
