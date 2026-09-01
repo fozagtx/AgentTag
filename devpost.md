@@ -2,28 +2,30 @@
 
 ## Inspiration
 
-We wanted a Web MCP native ideation canvas.
+A Web MCP native ideation canvas for hackathon teams.
 
 ## What it does
 
-Cofound is a Web MCP native ideation canvas. Combine stacks on a board. Download when you are done.
+Three fields: Sponsors, Industries, Wild cards. Click two pieces to combine them. Agents run the same actions on the page. Download markdown when done.
+
+Live: https://cofound-wzks.onrender.com
 
 ## How we built it
 
-A Web MCP native ideation canvas in the browser. No backend.
+Next.js 16, React 19, client only. `localStorage` for the board. Web MCP tools on the page: `list_palette`, `add_element`, `ingest_doc`, `combine`, `list_ideas`, `scamper`, `download_canvas`, `reset_canvas`.
 
 ## Challenges we ran into
 
-Making the canvas agent-native without a server.
+PDF drop does not parse in the browser. Ingest is `.txt`, `.md`, and `.html`.
 
 ## Accomplishments that we're proud of
 
-We built a Web MCP native ideation canvas.
+The live canvas. Eight MCP tools in the page. No database.
 
 ## What we learned
 
-Web MCP belongs on the page, not behind an API.
+The eight tools map to the three fields and the download button.
 
 ## What's next for Cofound
 
-Keep the Web MCP native ideation canvas short and usable.
+Read sponsor PDFs in the browser.
