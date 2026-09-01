@@ -1,12 +1,13 @@
-import { PALETTE } from "./elements";
 import {
   addCustomElement,
+  addMany,
   combineByName,
   downloadMarkdown,
   getCanvasState,
   resetCanvas,
   runScamper,
 } from "./canvas-store";
+import { ingestText } from "./ingest";
 
 export type McpTool = {
   name: string;
@@ -26,7 +27,6 @@ export const CANVAS_TOOLS: McpTool[] = [
     description: "List tech, sponsor, industry, and wild-card pieces on the ideation canvas.",
     inputSchema: { type: "object", properties: {} },
     handler: () => ({
-      palette: PALETTE.map((el) => ({ name: el.name, kind: el.kind })),
       workspace: getCanvasState().workspace.map((el) => ({ name: el.name, kind: el.kind })),
     }),
   },
@@ -49,6 +49,23 @@ export const CANVAS_TOOLS: McpTool[] = [
       const kind = ["tech", "sponsor", "industry", "wild"].includes(args.kind) ? args.kind : "sponsor";
       const el = addCustomElement(String(args.name || ""), kind);
       return { added: el };
+    },
+  },
+  {
+    name: "ingest_doc",
+    description:
+      "Read hackathon or sponsor text (README, prize list, Devpost blurb) and register only stacks named in that text.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "Plain text of the doc" },
+      },
+      required: ["text"],
+    },
+    handler: (args) => {
+      const items = ingestText(String(args.text || ""));
+      const added = addMany(items);
+      return { added: added.map((el) => ({ name: el.name, kind: el.kind })), count: added.length };
     },
   },
   {

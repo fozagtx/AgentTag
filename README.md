@@ -10,8 +10,8 @@ The method is [Little Alchemy ideation](https://thehackathonplaybook.dev/playboo
 
 ## Features
 
-- Palette of sponsor tools, tech, industries, and wild cards
-- Add this weekend's sponsor by name
+- Empty canvas on purpose. An agent fills stacks with `add_element`, or you drop a sponsor / hackathon doc
+- Type a stack in the header if you want to add one by hand
 - Click two pieces on the canvas to combine them into an idea
 - SCAMPER on an idea when you want to push it
 - Download a markdown file of the canvas
@@ -33,7 +33,7 @@ Open the URL Next prints (often [http://localhost:3000](http://localhost:3000)).
 
 ## Usage
 
-1. Click pieces onto the canvas (Twilio, Health, or a sponsor from this event).
+1. An agent calls `add_element` / `ingest_doc`, or drop a `.txt` / `.md` / `.html` sponsor list, or type a name.
 2. Click two canvas pieces to combine them.
 3. Optional: **Push with SCAMPER** on an idea.
 4. **Download** to save `ideation-canvas.md`.
@@ -48,6 +48,7 @@ The page is the MCP server. Agents call `window.WebMCP` or JSON-RPC `postMessage
 |---|---|
 | `list_palette` | List palette and workspace pieces |
 | `add_element` | Add a piece (use `kind: sponsor` for event APIs) |
+| `ingest_doc` | Register only stacks named in pasted hackathon / sponsor text |
 | `combine` | Combine two pieces by name |
 | `list_ideas` | List ideas on the canvas |
 | `scamper` | Run SCAMPER on an idea id |

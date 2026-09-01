@@ -1,4 +1,4 @@
-import { CanvasElement, PALETTE } from "./elements";
+import { CanvasElement, ElementKind } from "./elements";
 import { Idea, combineElements, ideasToMarkdown, pairKey, scamperIdea } from "./combine";
 
 export type CanvasState = {
@@ -8,8 +8,7 @@ export type CanvasState = {
   customName: string;
 };
 
-const KEY = "cofound-canvas-v1";
-const LEGACY_KEY = "agenttag-canvas-v1";
+const KEY = "cofound-canvas-v2";
 
 let state: CanvasState = load();
 const listeners = new Set<() => void>();
@@ -19,7 +18,7 @@ function load(): CanvasState {
     return { workspace: [], ideas: [], selectedId: null, customName: "" };
   }
   try {
-    const raw = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY);
+    const raw = localStorage.getItem(KEY);
     if (!raw) return { workspace: [], ideas: [], selectedId: null, customName: "" };
     const parsed = JSON.parse(raw);
     return {
@@ -62,9 +61,11 @@ export function addToWorkspace(el: CanvasElement): CanvasState {
   return state;
 }
 
-export function addCustomElement(name: string, kind: CanvasElement["kind"] = "sponsor"): CanvasElement {
+export function addCustomElement(name: string, kind: ElementKind = "sponsor"): CanvasElement {
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Name is required.");
+  const existing = state.workspace.find((w) => w.name.toLowerCase() === trimmed.toLowerCase());
+  if (existing) return existing;
   const el: CanvasElement = {
     id: `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
     name: trimmed,
@@ -72,6 +73,14 @@ export function addCustomElement(name: string, kind: CanvasElement["kind"] = "sp
   };
   addToWorkspace(el);
   return el;
+}
+
+export function addMany(items: Array<{ name: string; kind: ElementKind }>): CanvasElement[] {
+  const added: CanvasElement[] = [];
+  for (const item of items) {
+    added.push(addCustomElement(item.name, item.kind));
+  }
+  return added;
 }
 
 export function removeFromWorkspace(id: string): void {
@@ -148,8 +157,6 @@ export function downloadMarkdown(): string {
 
 function findNamed(name: string): CanvasElement {
   const q = name.trim().toLowerCase();
-  const fromPalette = PALETTE.find((el) => el.name.toLowerCase() === q || el.id === q);
-  if (fromPalette) return fromPalette;
   const fromWorkspace = state.workspace.find((el) => el.name.toLowerCase() === q);
   if (fromWorkspace) return fromWorkspace;
   return { id: `c_${Math.random().toString(36).slice(2, 8)}`, name: name.trim(), kind: "sponsor" };
