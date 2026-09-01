@@ -52,6 +52,10 @@ Enter https://cofound-wzks.onrender.com in the Codex browser. The agent cannot o
 
 Hello, I want to create a little prototype. I have an OpenAI API key and an ElevenLabs API key. Let's ideate what I can build.
 
+<img src="public/codex-1.jpg" alt="Codex using CoFound">
+
+<img src="public/codex-2.jpg" alt="Codex using CoFound with SCAMPER">
+
 ## Web MCP
 
 Agents call `window.WebMCP` or JSON-RPC `postMessage` (`tools/list`, `tools/call`):
