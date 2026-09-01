@@ -13,7 +13,7 @@ export async function GET() {
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch sites" },
+      { success: false, error: "Couldn't load sites." },
       { status: 500 }
     );
   }

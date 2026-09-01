@@ -1,17 +1,7 @@
 import { Pool } from "@neondatabase/serverless";
-import { SiteConfig } from "./types";
+import { SiteConfig, TelemetryEvent } from "./types";
 
-export interface TelemetryEvent {
-  id: string;
-  site_id: string;
-  site_title: string;
-  tool_name: string;
-  args: Record<string, any>;
-  client_type: string;
-  status: "success" | "requires_approval" | "error";
-  duration_ms: number;
-  created_at: string;
-}
+export type { TelemetryEvent };
 
 // In-memory fallback map for zero-setup local dev / testing
 const memoryStore = new Map<string, SiteConfig>();
@@ -56,9 +46,9 @@ async function ensureTables() {
         site_title TEXT NOT NULL,
         tool_name VARCHAR(128) NOT NULL,
         args JSONB NOT NULL,
-        client_type VARCHAR(64) NOT NULL DEFAULT 'Claude Desktop',
+        client_type VARCHAR(64) NOT NULL DEFAULT 'unknown',
         status VARCHAR(32) NOT NULL DEFAULT 'success',
-        duration_ms INT NOT NULL DEFAULT 45,
+        duration_ms INT NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);

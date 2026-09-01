@@ -36,6 +36,18 @@ export interface SiteConfig {
   updated_at: string;
 }
 
+export interface TelemetryEvent {
+  id: string;
+  site_id: string;
+  site_title: string;
+  tool_name: string;
+  args: Record<string, any>;
+  client_type: string;
+  status: "success" | "requires_approval" | "error";
+  duration_ms: number;
+  created_at: string;
+}
+
 export interface CrawlResult {
   url: string;
   title: string;

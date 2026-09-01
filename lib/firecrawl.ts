@@ -1,101 +1,118 @@
 import { CrawlResult } from "./types";
 
+export class CrawlError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CrawlError";
+  }
+}
+
 export async function crawlUrl(targetUrl: string): Promise<CrawlResult> {
-  const apiKey = process.env.FIRECRAWL_API_KEY;
+  const apiKey = process.env.FIRECRAWL_API_KEY?.trim();
 
-  // 1. Try real Firecrawl API if key exists
   if (apiKey) {
-    try {
-      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          url: targetUrl,
-          formats: ["markdown", "html"],
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const rawMarkdown = data.data?.markdown || data.markdown || "";
-        const markdown = cleanMarkdownContent(rawMarkdown);
-        const title = data.data?.metadata?.title || extractTitleFromUrl(targetUrl);
-        const description = data.data?.metadata?.description || "";
-        const framework = detectFramework(markdown, targetUrl);
-        const detected_features = detectFeatures(markdown);
-
-        return {
-          url: targetUrl,
-          title,
-          description,
-          markdown,
-          framework,
-          detected_features,
-        };
-      }
-    } catch (err) {
-      console.warn("Firecrawl API request failed, switching to direct fetch fallback:", err);
-    }
+    const scraped = await scrapeWithFirecrawl(targetUrl, apiKey);
+    if (scraped) return scraped;
+    throw new CrawlError("Firecrawl could not read this URL.");
   }
 
-  // 2. Direct HTML fetch fallback
-  try {
-    const res = await fetch(targetUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; AgentTagBot/1.0; +https://agenttag.io)",
-      },
-    });
+  const fetched = await scrapeWithFetch(targetUrl);
+  if (fetched) return fetched;
 
-    if (res.ok) {
-      const html = await res.text();
-      const title = extractTitleFromHtml(html) || extractTitleFromUrl(targetUrl);
-      const markdown = htmlToCleanMarkdown(html);
-      const framework = detectFramework(html + " " + markdown, targetUrl);
-      const detected_features = detectFeatures(markdown + " " + html);
+  throw new CrawlError("Could not read this URL.");
+}
 
-      return {
-        url: targetUrl,
-        title,
-        description: extractMetaDescription(html),
-        markdown,
-        framework,
-        detected_features,
-      };
-    }
-  } catch (err) {
-    console.warn("Direct fetch failed, generating clean structured snapshot for URL:", targetUrl, err);
+async function scrapeWithFirecrawl(targetUrl: string, apiKey: string): Promise<CrawlResult | null> {
+  const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      url: targetUrl,
+      formats: ["markdown", "html"],
+    }),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const detail =
+      payload?.error ||
+      payload?.message ||
+      `Firecrawl returned ${response.status}`;
+    throw new CrawlError(String(detail));
   }
 
-  // 3. Clean structured fallback for test URLs
-  const title = extractTitleFromUrl(targetUrl);
+  const data = payload?.data || payload || {};
+  const markdown = cleanMarkdownContent(data.markdown || "");
+  if (!markdown) return null;
+
+  const title =
+    data.metadata?.title ||
+    data.metadata?.ogTitle ||
+    extractTitleFromMarkdown(markdown) ||
+    extractTitleFromUrl(targetUrl);
+  const description = data.metadata?.description || data.metadata?.ogDescription || "";
+  const html = typeof data.html === "string" ? data.html : "";
+
   return {
     url: targetUrl,
     title,
-    description: `Documentation & API Reference for ${title}`,
-    markdown: generateFallbackMarkdown(targetUrl, title),
-    framework: "Modern Web",
-    detected_features: ["Search Index", "Code Snippets", "REST API Reference", "Quickstart Guide"],
+    description,
+    markdown,
+    framework: detectFramework(`${markdown} ${html} ${targetUrl}`, targetUrl),
+    detected_features: detectFeatures(`${markdown} ${html}`),
+  };
+}
+
+async function scrapeWithFetch(targetUrl: string): Promise<CrawlResult | null> {
+  const res = await fetch(targetUrl, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; AgentTagBot/1.0; +https://agenttag.io)",
+      Accept: "text/html,application/xhtml+xml",
+    },
+    redirect: "follow",
+  });
+
+  if (!res.ok) return null;
+
+  const html = await res.text();
+  if (!html.trim()) return null;
+
+  const markdown = htmlToCleanMarkdown(html);
+  if (!markdown) return null;
+
+  return {
+    url: targetUrl,
+    title: extractTitleFromHtml(html) || extractTitleFromMarkdown(markdown) || extractTitleFromUrl(targetUrl),
+    description: extractMetaDescription(html),
+    markdown,
+    framework: detectFramework(`${html} ${markdown} ${targetUrl}`, targetUrl),
+    detected_features: detectFeatures(`${markdown} ${html}`),
   };
 }
 
 function extractTitleFromUrl(url: string): string {
   try {
     const parsed = new URL(url);
-    const hostParts = parsed.hostname.replace("www.", "").split(".");
+    const hostParts = parsed.hostname.replace(/^www\./, "").split(".");
     const name = hostParts[0] === "docs" ? hostParts[1] || "Documentation" : hostParts[0];
     return name.charAt(0).toUpperCase() + name.slice(1);
   } catch {
-    return "Web Resource";
+    return "Untitled site";
   }
+}
+
+function extractTitleFromMarkdown(markdown: string): string {
+  const heading = markdown.match(/^#\s+(.+)$/m);
+  return heading ? heading[1].trim() : "";
 }
 
 function extractTitleFromHtml(html: string): string {
   const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (match) {
-    return match[1].replace(/&amp;/g, "&").replace(/&#39;/g, "'").trim();
+    return decodeEntities(match[1]).trim();
   }
   return "";
 }
@@ -103,136 +120,104 @@ function extractTitleFromHtml(html: string): string {
 function extractMetaDescription(html: string): string {
   const match = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
   if (match) {
-    return match[1].replace(/&amp;/g, "&").replace(/&#39;/g, "'").trim();
+    return decodeEntities(match[1]).trim();
   }
   return "";
 }
 
 function detectFramework(content: string, url: string): string {
-  const lower = (content + " " + url).toLowerCase();
+  const lower = `${content} ${url}`.toLowerCase();
   if (lower.includes("mintlify")) return "Mintlify";
   if (lower.includes("docusaurus")) return "Docusaurus";
   if (lower.includes("nextra")) return "Nextra";
   if (lower.includes("gitbook")) return "GitBook";
   if (lower.includes("vitepress")) return "VitePress";
-  if (lower.includes("starlight") || lower.includes("astro")) return "Starlight";
+  if (lower.includes("starlight")) return "Starlight";
   if (lower.includes("webflow")) return "Webflow";
-  if (lower.includes("framer")) return "Framer";
   if (lower.includes("shopify")) return "Shopify";
-  return "Custom Framework";
+  return "";
 }
 
 function detectFeatures(content: string): string[] {
   const features: string[] = [];
   const lower = content.toLowerCase();
-  if (lower.includes("search") || lower.includes("docsearch") || lower.includes("algolia")) {
-    features.push("Search Index");
-  }
-  if (lower.includes("```") || lower.includes("code") || lower.includes("curl") || lower.includes("import ")) {
-    features.push("Code Snippets");
-  }
-  if (lower.includes("api") || lower.includes("endpoint") || lower.includes("rest") || lower.includes("post ")) {
-    features.push("REST API Reference");
-  }
-  if (lower.includes("pricing") || lower.includes("$") || lower.includes("tier") || lower.includes("plan")) {
-    features.push("Pricing & Plans");
-  }
-  if (lower.includes("calendly") || lower.includes("cal.com") || lower.includes("book a call") || lower.includes("schedule")) {
-    features.push("Booking Calendar");
-  }
-  if (lower.includes("cart") || lower.includes("checkout") || lower.includes("stripe") || lower.includes("buy")) {
-    features.push("Checkout / E-Commerce");
-  }
-  return features.length > 0 ? features : ["General Documentation"];
+  if (hasCode(content)) features.push("code");
+  if (hasApi(content)) features.push("api");
+  if (hasPricing(lower)) features.push("pricing");
+  if (hasCheckout(lower)) features.push("checkout");
+  if (hasBooking(lower)) features.push("booking");
+  if (/case stud|testimonial|our work|portfolio/.test(lower)) features.push("case_studies");
+  return features;
 }
 
-function htmlToCleanMarkdown(rawHtml: string): string {
-  let text = rawHtml
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
-    .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, "")
-    .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, "")
-    .replace(/<head\b[^<]*(?:(?!<\/head>)<[^<]*)*<\/head>/gi, "");
+export function hasCode(content: string): boolean {
+  return /```[\s\S]*?```/.test(content) || /<pre[\s>]/i.test(content);
+}
 
-  // Headings
-  text = text.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n");
-  text = text.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n");
-  text = text.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n");
-  text = text.replace(/<h[4-6][^>]*>([\s\S]*?)<\/h[4-6]>/gi, "\n\n#### $1\n\n");
+export function hasApi(content: string): boolean {
+  return /\b(GET|POST|PUT|PATCH|DELETE)\s+\/[a-z0-9_\-/{}.]+/i.test(content) ||
+    /\/v\d+\/[a-z0-9_\-/{}.]+/i.test(content);
+}
 
-  // Code Blocks
-  text = text.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, "\n\n```\n$1\n```\n\n");
-  text = text.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, "`$1`");
+export function hasPricing(lower: string): boolean {
+  return /(\$\s?\d|\d+\s?\/\s?(mo|month|yr|year)|pricing|plans?\b)/.test(lower);
+}
 
-  // Lists & Paragraphs
-  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "\n* $1");
-  text = text.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "\n\n$1\n\n");
-  text = text.replace(/<br\s*[\/]?>/gi, "\n");
+export function hasCheckout(lower: string): boolean {
+  return /\b(checkout|add to cart|buy now|purchase|stripe|lemon.?squeezy|gumroad)\b/.test(lower);
+}
 
-  // Strip remaining HTML tags
-  text = text.replace(/<[^>]+>/g, " ");
+export function hasBooking(lower: string): boolean {
+  return /\b(calendly|cal\.com|book a (call|demo|meeting)|schedule a (call|demo))\b/.test(lower);
+}
 
-  // Decode HTML Entities
-  text = text
+function decodeEntities(text: string): string {
+  return text
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, "\"")
     .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ");
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
+}
 
-  // Strip broken JS/attribute fragments like ')">
-  text = text.replace(/['"\)]+>\s*/g, " ");
+function htmlToCleanMarkdown(rawHtml: string): string {
+  let text = rawHtml
+    .replace(/<script\b[\s\S]*?<\/script>/gi, "")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, "")
+    .replace(/<noscript\b[\s\S]*?<\/noscript>/gi, "")
+    .replace(/<svg\b[\s\S]*?<\/svg>/gi, "")
+    .replace(/<head\b[\s\S]*?<\/head>/gi, "");
 
-  // Normalize whitespace & empty lines
-  text = text
+  text = text.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n");
+  text = text.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n");
+  text = text.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n### $1\n\n");
+  text = text.replace(/<h[4-6][^>]*>([\s\S]*?)<\/h[4-6]>/gi, "\n\n#### $1\n\n");
+  text = text.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, "\n\n```\n$1\n```\n\n");
+  text = text.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, "`$1`");
+  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "\n* $1");
+  text = text.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "\n\n$1\n\n");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<[^>]+>/g, " ");
+  text = decodeEntities(text);
+
+  return text
     .split("\n")
     .map((line) => line.trim().replace(/\s+/g, " "))
     .filter((line) => line.length > 0)
-    .join("\n\n");
-
-  return text.slice(0, 15000);
+    .join("\n\n")
+    .slice(0, 20000);
 }
 
 function cleanMarkdownContent(markdown: string): string {
   return markdown
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, "\"")
-    .replace(/&#39;/g, "'")
-    .replace(/['"\)]+>\s*/g, " ")
+    .replace(/<script\b[\s\S]*?<\/script>/gi, "")
     .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .join("\n\n")
-    .slice(0, 15000);
-}
-
-function generateFallbackMarkdown(url: string, title: string): string {
-  return `
-# ${title}
-
-Welcome to the documentation and agent interface for ${title}.
-
-## Overview
-${title} provides high-performance cloud APIs and developer tooling.
-
-## Quickstart
-Install the client SDK:
-\`\`\`bash
-npm install ${title.toLowerCase().replace(/\s+/g, "-")}
-\`\`\`
-
-## Authentication
-Pass your API token in the Authorization header:
-\`\`\`typescript
-import { Client } from "${title.toLowerCase().replace(/\s+/g, "-")}";
-const client = new Client({ apiKey: process.env.API_KEY });
-\`\`\`
-
-## API Endpoints
-- GET /v1/resources: List all resources
-- POST /v1/resources: Create a new resource
-- DELETE /v1/resources/:id: Delete an existing resource
-`;
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, 20000);
 }

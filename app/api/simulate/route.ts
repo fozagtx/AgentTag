@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const config = await getSiteConfig(siteId);
     if (!config) {
-      return NextResponse.json({ error: "Site config not found in database." }, { status: 404 });
+      return NextResponse.json({ error: "Site not found." }, { status: 404 });
     }
 
     const tool = config.tools.find((t) => t.name === toolName);
@@ -20,71 +20,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Tool ${toolName} not found on this site.` }, { status: 404 });
     }
 
-    // Execute tool simulation against real markdown snapshot
-    let result: any = {};
     const markdown = config.markdown_snapshot || "";
-
-    if (toolName === "search_docs") {
-      const query = (args?.query || "").toLowerCase();
-      const lines = markdown.split("\n");
-      const matchedSnippets: string[] = [];
-
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].toLowerCase().includes(query)) {
-          const chunk = lines.slice(Math.max(0, i - 1), Math.min(lines.length, i + 5)).join("\n");
-          matchedSnippets.push(chunk);
-          if (matchedSnippets.length >= 3) break;
-        }
-      }
-
-      result = {
-        query: args?.query,
-        matched_sections: matchedSnippets.length > 0 ? matchedSnippets : ["Found reference in documentation headers."],
-        source_url: config.url,
-      };
-    } else if (toolName === "get_code_example") {
-      result = {
-        feature: args?.feature || "setup",
-        language: args?.language || "typescript",
-        snippet: `import { createClient } from "${config.title.toLowerCase().replace(/\s+/g, "-")}";\n\nconst client = createClient();\nawait client.${(args?.feature || "init").toLowerCase()}();`,
-        verified: true,
-      };
-    } else if (toolName === "get_pricing_tiers") {
-      result = {
-        currency: "USD",
-        source_url: config.url,
-        tiers: [
-          { name: "Starter", price: "$29/mo", features: ["Core features", "1 seat", "Community support"] },
-          { name: "Pro", price: "$79/mo", features: ["All features", "5 seats", "Priority support", "API access"] },
-          { name: "Enterprise", price: "Custom", features: ["Custom SLA", "Unlimited seats", "Dedicated account manager"] },
-        ],
-      };
-    } else if (toolName === "initiate_checkout" || toolName === "book_discovery_call") {
-      result = {
-        status: "success",
-        action: toolName,
-        details: args,
-        requires_human_confirmation: tool.requires_approval,
-        message: `Action '${toolName}' executed successfully with parameters: ${JSON.stringify(args)}`,
-      };
-    } else {
-      result = {
-        status: "success",
-        tool: toolName,
-        parameters_received: args,
-        data_preview: markdown.slice(0, 300) + "...",
-      };
-    }
+    const result = runToolAgainstSnapshot(tool.name, tool.execution_type, args || {}, markdown, config.url);
 
     const duration = Date.now() - startTime;
 
-    // Log real telemetry event to database
     await recordTelemetryEvent({
       site_id: config.site_id,
       site_title: config.title,
       tool_name: toolName,
       args: args || {},
-      client_type: "Simulator / Claude Desktop",
+      client_type: "Studio",
       status: tool.requires_approval ? "requires_approval" : "success",
       duration_ms: duration,
     });
@@ -96,6 +42,116 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Couldn't run this tool." }, { status: 500 });
   }
+}
+
+function runToolAgainstSnapshot(
+  toolName: string,
+  executionType: string,
+  args: Record<string, any>,
+  markdown: string,
+  sourceUrl: string
+) {
+  if (executionType === "dom_search" || toolName.startsWith("search_")) {
+    const query = String(args.query || "").trim();
+    if (!query) {
+      return { query, matches: [], source_url: sourceUrl };
+    }
+    return {
+      query,
+      matches: matchMarkdown(markdown, query, 3),
+      source_url: sourceUrl,
+    };
+  }
+
+  if (toolName === "get_code_example") {
+    const feature = String(args.feature || "").trim();
+    const language = String(args.language || "").trim().toLowerCase();
+    const fences = extractFences(markdown).filter((fence) => {
+      const blob = `${fence.lang}\n${fence.code}`.toLowerCase();
+      const langOk = !language || fence.lang.toLowerCase() === language;
+      const featureOk = !feature || blob.includes(feature.toLowerCase());
+      return langOk && featureOk;
+    });
+    const picked = (fences.length > 0 ? fences : extractFences(markdown)).slice(0, 3);
+    return {
+      feature: feature || null,
+      language: language || null,
+      snippets: picked,
+      source_url: sourceUrl,
+    };
+  }
+
+  if (toolName === "get_api_reference") {
+    const needle = String(args.endpoint_or_method || "").trim();
+    const hits = matchMarkdown(markdown, needle || "GET /", 5).filter((chunk) =>
+      /\b(GET|POST|PUT|PATCH|DELETE)\b|\/v\d+\//i.test(chunk)
+    );
+    return {
+      endpoint_or_method: needle || null,
+      excerpts: hits.length > 0 ? hits : matchMarkdown(markdown, needle, 3),
+      source_url: sourceUrl,
+    };
+  }
+
+  if (toolName === "get_pricing_tiers") {
+    const excerpts = markdown
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => /(\$\s?\d|\d+\s?\/\s?(mo|month|yr|year)|pricing|plan)/i.test(line))
+      .slice(0, 20);
+    return { excerpts, source_url: sourceUrl };
+  }
+
+  if (toolName === "get_case_studies") {
+    const industry = String(args.industry || "").trim();
+    return {
+      industry: industry || null,
+      excerpts: matchMarkdown(markdown, industry || "case", 4),
+      source_url: sourceUrl,
+    };
+  }
+
+  if (executionType === "dom_action") {
+    return {
+      status: "queued_on_page",
+      tool: toolName,
+      args,
+      source_url: sourceUrl,
+      note: "This action runs on the live site after confirmation. Nothing was charged or booked here.",
+    };
+  }
+
+  const query = Object.values(args).filter((v) => typeof v === "string" && v.trim()).join(" ");
+  return {
+    excerpts: query ? matchMarkdown(markdown, query, 3) : markdown.split("\n").filter(Boolean).slice(0, 8),
+    source_url: sourceUrl,
+  };
+}
+
+function extractFences(markdown: string): { lang: string; code: string }[] {
+  const fences: { lang: string; code: string }[] = [];
+  const re = /```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(markdown))) {
+    fences.push({ lang: match[1] || "", code: match[2].trim() });
+  }
+  return fences;
+}
+
+function matchMarkdown(markdown: string, query: string, limit: number): string[] {
+  if (!markdown) return [];
+  const q = query.toLowerCase();
+  const lines = markdown.split("\n");
+  const chunks: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (!lines[i].toLowerCase().includes(q)) continue;
+    const chunk = lines.slice(Math.max(0, i - 1), Math.min(lines.length, i + 6)).join("\n").trim();
+    if (chunk && !chunks.includes(chunk)) chunks.push(chunk);
+    if (chunks.length >= limit) break;
+  }
+
+  return chunks;
 }

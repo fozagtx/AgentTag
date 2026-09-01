@@ -13,15 +13,13 @@ import {
   Plus,
   Terminal,
   ExternalLink,
-  ShieldAlert,
-  Layers,
   ChevronDown,
   ChevronUp,
   Cpu,
   ArrowLeft,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import { BrandMark } from "@/components/BrandMark";
 
 export default function StudioPage() {
   const params = useParams();
@@ -33,8 +31,8 @@ export default function StudioPage() {
   const [toolArgs, setToolArgs] = useState<Record<string, string>>({});
   const [simulationResult, setSimulationResult] = useState<any>(null);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [vibePrompt, setVibePrompt] = useState("");
-  const [isAddingVibe, setIsAddingVibe] = useState(false);
+  const [newToolPrompt, setNewToolPrompt] = useState("");
+  const [isAddingTool, setIsAddingTool] = useState(false);
   const [expandedSchema, setExpandedSchema] = useState<string | null>(null);
   const [copiedScript, setCopiedScript] = useState(false);
   const [copiedMcp, setCopiedMcp] = useState(false);
@@ -99,20 +97,21 @@ export default function StudioPage() {
     }
   };
 
-  const handleAddVibeTool = async (e: React.FormEvent) => {
+  const handleAddTool = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!vibePrompt.trim() || !config) return;
-    setIsAddingVibe(true);
+    if (!newToolPrompt.trim() || !config) return;
+    setIsAddingTool(true);
 
-    const newToolName = vibePrompt
-      .toLowerCase()
-      .replace(/[^a-z0-9_]/g, "_")
-      .slice(0, 30) || "custom_tool";
+    const newToolName =
+      newToolPrompt
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "_")
+        .slice(0, 30) || "custom_tool";
 
     const newTool: WebMCPTool = {
       id: `tool_${Date.now()}`,
       name: newToolName,
-      description: vibePrompt,
+      description: newToolPrompt,
       parameters: {
         type: "object",
         properties: {
@@ -129,8 +128,8 @@ export default function StudioPage() {
     const updatedConfig = { ...config, tools: updatedTools };
     setConfig(updatedConfig);
     setSelectedTool(newTool.name);
-    setVibePrompt("");
-    setIsAddingVibe(false);
+    setNewToolPrompt("");
+    setIsAddingTool(false);
 
     await fetch(`/api/sites/${siteId}`, {
       method: "PUT",
@@ -141,23 +140,32 @@ export default function StudioPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 bg-[#B09CFB] text-[#151617]">
-        <Cpu className="h-8 w-8 text-[#151617] animate-spin-fast" />
-        <p className="font-display text-xl uppercase tracking-wider text-balance">
-          Loading WebMCP Studio...
-        </p>
+      <div className="min-h-screen bg-[#07080a] text-[#9c9c9d] flex flex-col">
+        <header className="flex h-14 items-center gap-3 border-b border-white/10 px-4">
+          <BrandMark href="/dashboard" />
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm">Loading...</p>
+        </div>
       </div>
     );
   }
 
   if (!config) {
     return (
-      <div className="max-w-md mx-auto my-20 p-8 bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg rounded-[16px] text-center ring-1 ring-black/5">
-        <h2 className="font-display text-2xl text-[#151617]">CONFIG NOT FOUND</h2>
-        <p className="text-sm font-medium text-[#151617]/70 mt-2 text-pretty">Target site identifier does not exist in registry.</p>
-        <Link href="/" className="mt-6 inline-block px-6 py-2.5 bg-[#FFBE98] text-[#151617] font-bold text-xs uppercase rounded-[10px] border-2 border-[#151617] shadow-comic-sm btn-press">
-          Create New Registry
-        </Link>
+      <div className="min-h-screen bg-[#07080a] text-white flex flex-col">
+        <header className="flex h-14 items-center gap-3 border-b border-white/10 px-4">
+          <BrandMark href="/dashboard" />
+        </header>
+        <div className="flex-1 flex items-center justify-center p-6">
+        <div className="max-w-md w-full rounded-[14px] border border-white/10 bg-white/[0.03] p-8 text-center">
+          <h2 className="text-xl font-semibold">Site not found</h2>
+          <p className="text-sm text-[#9c9c9d] mt-2">This site is not in your list.</p>
+          <Link href="/dashboard" className="btn-keycap mt-6 inline-flex h-9 items-center px-4 text-xs">
+            Back to dashboard
+          </Link>
+        </div>
+        </div>
       </div>
     );
   }
@@ -176,185 +184,159 @@ export default function StudioPage() {
   );
 
   return (
-    <div className="w-full min-h-screen bg-[#F5F2F0] text-[#151617] py-10 px-4 sm:px-8 font-sans">
-      <div className="max-w-[1280px] mx-auto">
-        {/* Top Control Header Card */}
-        <div className="p-6 sm:p-8 rounded-[16px] bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg flex flex-col lg:flex-row lg:items-center justify-between gap-6 ring-1 ring-black/5">
-          <div>
+    <div className="w-full min-h-screen bg-[#07080a] text-white">
+      <header className="flex h-14 items-center gap-3 border-b border-white/10 px-4">
+        <BrandMark href="/dashboard" />
+      </header>
+      <div className="max-w-[1280px] mx-auto py-10 px-4 sm:px-8">
+        <div className="p-6 sm:p-8 rounded-[14px] bg-white/[0.03] border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="min-w-0">
             <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="p-2.5 min-h-[44px] min-w-[44px] rounded-[10px] bg-[#F5F2F0] hover:bg-[#FFBE98] border-2 border-[#151617] shadow-comic-sm transition-all text-[#151617] btn-press flex items-center justify-center">
+              <Link
+                href="/dashboard"
+                className="p-2.5 min-h-11 min-w-11 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors duration-150"
+                aria-label="Back to dashboard"
+              >
                 <ArrowLeft className="h-4 w-4" />
               </Link>
-              <h1 className="font-display text-2xl sm:text-4xl text-[#151617] text-balance">
-                {config.title}
-              </h1>
-              <span className="px-2.5 py-0.5 rounded-[9999px] bg-[#B09CFB] border-2 border-[#151617] text-xs font-mono font-bold text-[#151617] uppercase">
-                {config.framework || "Web"}
-              </span>
+              <h1 className="text-2xl sm:text-3xl font-semibold truncate">{config.title}</h1>
             </div>
-
-            <div className="flex flex-wrap items-center gap-4 mt-3 text-xs font-bold text-[#151617]">
-              <a href={config.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:underline">
-                <span>{config.url}</span>
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-              <span>•</span>
-              <span className="font-mono bg-[#F5F2F0] px-2 py-0.5 rounded-[6px] border border-[#151617] tabular-nums">
-                ID: {config.site_id}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowEmbedModal(true)}
-              className="h-[44px] min-h-[44px] px-6 rounded-[10px] bg-[#FFBE98] hover:bg-[#ffa978] text-[#151617] font-bold text-xs uppercase tracking-wide border-2 border-[#151617] shadow-comic btn-press flex items-center gap-2"
+            <a
+              href={config.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-mono text-[#9c9c9d] hover:text-white"
             >
-              <Code2 className="h-4 w-4" />
-              <span>Get Embed Snippet</span>
-            </button>
+              <span className="truncate">{config.url}</span>
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+            </a>
           </div>
+
+          <button
+            onClick={() => setShowEmbedModal(true)}
+            className="btn-keycap h-11 px-5 inline-flex items-center gap-2 text-xs"
+            type="button"
+          >
+            <Code2 className="h-4 w-4" />
+            Get script tag
+          </button>
         </div>
 
-        {/* Studio Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
-          {/* Left Column: Tool Cards & Vibe Refiner */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="flex items-center justify-between pb-2 border-b-2 border-[#151617]/10">
-              <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-[#151617]" />
-                <h2 className="font-display text-xl text-[#151617]">ACTIVE TOOL REGISTRY</h2>
-              </div>
-              <span className="px-2.5 py-0.5 rounded-[9999px] bg-[#4ECB71] border-2 border-[#151617] text-xs font-bold font-mono tabular-nums">
-                {config.tools.filter((t) => t.is_enabled).length}/{config.tools.length} ACTIVE
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Tools</h2>
+              <span className="text-xs text-[#9c9c9d] tabular-nums">
+                {config.tools.filter((t) => t.is_enabled).length} on
               </span>
             </div>
 
-            {/* Tool Cards */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {config.tools.map((tool) => (
                 <div
                   key={tool.id}
-                  className={`p-6 rounded-[16px] border-2 border-[#151617] transition-all ring-1 ring-black/5 ${
-                    tool.is_enabled
-                      ? "bg-[#FAFAF9] shadow-comic"
-                      : "bg-[#FAFAF9]/50 opacity-60 shadow-none"
+                  className={`p-5 rounded-[14px] border border-white/10 bg-white/[0.03] ${
+                    tool.is_enabled ? "" : "opacity-50"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-mono text-sm font-bold text-[#151617] bg-[#B09CFB] px-2 py-0.5 rounded-[6px] border-2 border-[#151617]">
-                          {tool.name}
-                        </span>
-                        {tool.requires_approval && (
-                          <span className="flex items-center gap-1 font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-[6px] bg-[#FFBE98] border-2 border-[#151617] text-[#151617]">
-                            <ShieldAlert className="h-3 w-3" />
-                            HITL Guardrail
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-sm">{tool.name}</span>
+                        {tool.requires_approval ? (
+                          <span className="text-[11px] px-2 py-0.5 rounded-md border border-white/10 text-[#9c9c9d]">
+                            Needs confirmation
                           </span>
+                        ) : null}
+                      </div>
+                      <p className="text-sm text-[#9c9c9d] mt-2">{tool.description}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {Object.entries(tool.parameters.properties || {}).map(
+                          ([paramName, prop]: [string, any]) => (
+                            <span
+                              key={paramName}
+                              className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 font-mono text-[11px] text-[#9c9c9d]"
+                            >
+                              {paramName}
+                              {prop?.type ? `: ${prop.type}` : ""}
+                            </span>
+                          )
                         )}
                       </div>
-                      <p className="text-xs font-medium text-[#151617] mt-3 leading-relaxed text-pretty">{tool.description}</p>
-
-                      {/* Parameters Chip List */}
-                      <div className="flex flex-wrap items-center gap-1.5 mt-4">
-                        {Object.entries(tool.parameters.properties || {}).map(([paramName, prop]: [string, any]) => (
-                          <span
-                            key={paramName}
-                            className="px-2 py-0.5 rounded-[6px] bg-[#F5F2F0] border border-[#151617] font-mono text-[11px] font-bold text-[#151617]"
-                          >
-                            {paramName}: <span className="text-[#9078F0]">{prop.type}</span>
-                          </span>
-                        ))}
-                      </div>
                     </div>
-
-                    {/* Toggle Button (44px min touch bounds) */}
                     <button
                       onClick={() => toggleTool(tool.id)}
-                      className="p-1 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#151617] transition-colors"
-                      aria-label="Toggle tool active state"
+                      className="p-1 min-h-11 min-w-11 flex items-center justify-center"
+                      aria-label={tool.is_enabled ? "Turn tool off" : "Turn tool on"}
+                      type="button"
                     >
                       {tool.is_enabled ? (
-                        <ToggleRight className="h-8 w-8 text-[#4ECB71]" />
+                        <ToggleRight className="h-8 w-8 text-[#ff6b4a]" />
                       ) : (
-                        <ToggleLeft className="h-8 w-8 text-[#151617]/40" />
+                        <ToggleLeft className="h-8 w-8 text-[#9c9c9d]" />
                       )}
                     </button>
                   </div>
 
-                  {/* Schema inspection */}
-                  <div className="mt-4 pt-3 border-t-2 border-[#151617]/10 flex items-center justify-between text-[11px] font-mono font-bold text-[#151617]/60">
-                    <button
-                      onClick={() => setExpandedSchema(expandedSchema === tool.id ? null : tool.id)}
-                      className="flex items-center gap-1 hover:text-[#151617]"
-                    >
-                      <span>{expandedSchema === tool.id ? "[Hide Schema]" : "[Inspect JSON Schema]"}</span>
-                      {expandedSchema === tool.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                    </button>
-                    <span className="uppercase text-[10px]">{tool.execution_type}</span>
-                  </div>
-
-                  {expandedSchema === tool.id && (
-                    <pre className="mt-3 p-4 rounded-[10px] bg-[#0D0E0F] text-[#4ECB71] text-[11px] font-mono border-2 border-[#151617] overflow-x-auto ring-1 ring-white/10">
+                  <button
+                    onClick={() => setExpandedSchema(expandedSchema === tool.id ? null : tool.id)}
+                    className="mt-3 flex items-center gap-1 text-[11px] text-[#9c9c9d] hover:text-white"
+                    type="button"
+                  >
+                    {expandedSchema === tool.id ? "Hide parameters" : "Parameters"}
+                    {expandedSchema === tool.id ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                  </button>
+                  {expandedSchema === tool.id ? (
+                    <pre className="mt-3 p-4 rounded-lg bg-[#0c0d0f] text-[#9c9c9d] text-[11px] font-mono border border-white/10 overflow-x-auto">
                       {JSON.stringify(tool.parameters, null, 2)}
                     </pre>
-                  )}
+                  ) : null}
                 </div>
               ))}
             </div>
 
-            {/* Vibe Prompt: Add Tool via Natural Language */}
-            <div className="p-6 rounded-[16px] bg-[#B09CFB] border-2 border-[#151617] shadow-comic ring-1 ring-black/5">
-              <div className="font-display text-lg text-[#151617] mb-2 flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                <span>VIBE REFINE: DESCRIBE ANY CUSTOM TOOL</span>
-              </div>
-              <form onSubmit={handleAddVibeTool} className="flex flex-col sm:flex-row gap-2 mt-3">
-                <input
-                  type="text"
-                  value={vibePrompt}
-                  onChange={(e) => setVibePrompt(e.target.value)}
-                  placeholder="e.g. 'Add a tool to check team pricing' or 'Add a tool to query CLI flags'"
-                  className="flex-1 px-4 py-2.5 rounded-[10px] bg-[#FAFAF9] border-2 border-[#151617] text-xs font-bold text-[#151617] placeholder:text-[#151617]/50 focus:outline-none min-h-[44px]"
-                />
-                <button
-                  type="submit"
-                  disabled={isAddingVibe || !vibePrompt.trim()}
-                  className="px-6 py-2.5 min-h-[44px] rounded-[10px] bg-[#FFBE98] hover:bg-[#ffa978] text-[#151617] font-bold text-xs uppercase border-2 border-[#151617] shadow-comic-sm btn-press flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Tool</span>
-                </button>
-              </form>
-            </div>
+            <form
+              onSubmit={handleAddTool}
+              className="p-5 rounded-[14px] border border-white/10 bg-white/[0.03] flex flex-col sm:flex-row gap-2"
+            >
+              <input
+                type="text"
+                value={newToolPrompt}
+                onChange={(e) => setNewToolPrompt(e.target.value)}
+                placeholder="Describe a tool to add"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-[#9c9c9d] focus:outline-none min-h-11"
+              />
+              <button
+                type="submit"
+                disabled={isAddingTool || !newToolPrompt.trim()}
+                className="btn-keycap min-h-11 px-4 inline-flex items-center justify-center gap-1.5 text-xs disabled:opacity-50"
+              >
+                <Plus className="h-4 w-4" />
+                Add tool
+              </button>
+            </form>
           </div>
 
-          {/* Right Column: Live Agent Simulator Card */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="p-6 rounded-[16px] bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-lg sticky top-24 ring-1 ring-black/5">
-              <div className="flex items-center justify-between pb-4 border-b-2 border-[#151617]/10">
-                <div className="flex items-center gap-2">
-                  <Terminal className="h-5 w-5 text-[#151617]" />
-                  <h3 className="font-display text-lg text-[#151617]">LIVE AGENT SIMULATOR</h3>
-                </div>
-                <span className="px-2 py-0.5 rounded-[9999px] bg-[#4ECB71] text-[#151617] font-mono text-[10px] font-bold border border-[#151617]">
-                  TEST HARNESS
-                </span>
+          <div className="lg:col-span-5">
+            <div className="p-6 rounded-[14px] bg-white/[0.03] border border-white/10 sticky top-8">
+              <div className="flex items-center gap-2 pb-4 border-b border-white/10">
+                <Terminal className="h-4 w-4 text-[#9c9c9d]" />
+                <h3 className="text-base font-semibold">Try a tool</h3>
               </div>
 
-              {/* Select Tool */}
               <div className="mt-4">
-                <label className="block font-mono text-xs font-bold text-[#151617] mb-1.5">
-                  Select Tool to Test:
-                </label>
+                <label className="block text-xs text-[#9c9c9d] mb-1.5">Tool</label>
                 <select
                   value={selectedTool}
                   onChange={(e) => {
                     setSelectedTool(e.target.value);
                     setToolArgs({});
                   }}
-                  className="w-full px-3 py-2.5 rounded-[10px] bg-[#F5F2F0] border-2 border-[#151617] text-xs font-mono font-bold text-[#151617] focus:outline-none min-h-[44px]"
+                  className="w-full px-3 py-2.5 rounded-lg bg-[#0c0d0f] border border-white/10 text-sm text-white focus:outline-none min-h-11"
                 >
                   {config.tools
                     .filter((t) => t.is_enabled)
@@ -366,85 +348,77 @@ export default function StudioPage() {
                 </select>
               </div>
 
-              {/* Argument Inputs */}
-              {selectedTool && (
+              {selectedTool ? (
                 <div className="mt-4 space-y-3">
                   {Object.entries(
                     config.tools.find((t) => t.name === selectedTool)?.parameters.properties || {}
                   ).map(([paramName, prop]: [string, any]) => (
                     <div key={paramName}>
-                      <label className="block font-mono text-[11px] font-bold text-[#151617] mb-1">
-                        {paramName} ({prop.type}):
-                      </label>
+                      <label className="block text-[11px] text-[#9c9c9d] mb-1">{paramName}</label>
                       <input
                         type="text"
                         placeholder={prop.description || paramName}
                         value={toolArgs[paramName] || ""}
                         onChange={(e) => setToolArgs({ ...toolArgs, [paramName]: e.target.value })}
-                        className="w-full px-3 py-2 rounded-[10px] bg-[#F5F2F0] border-2 border-[#151617] text-xs font-medium text-[#151617] focus:outline-none min-h-[40px]"
+                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none min-h-10"
                       />
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
 
-              {/* Execute Simulation Button (44px min touch, optical translate) */}
               <button
                 onClick={handleSimulate}
                 disabled={isSimulating || !selectedTool}
-                className="mt-6 w-full h-[46px] min-h-[44px] rounded-[10px] bg-[#4ECB71] hover:bg-[#43b764] text-[#151617] font-bold text-xs uppercase tracking-wide border-2 border-[#151617] shadow-comic btn-press flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="btn-keycap mt-6 w-full h-11 inline-flex items-center justify-center gap-2 text-xs disabled:opacity-50"
+                type="button"
               >
                 {isSimulating ? (
-                  <div className="flex items-center gap-2">
+                  <>
                     <Cpu className="h-4 w-4 animate-spin-fast" />
-                    <span>Executing Dispatches...</span>
-                  </div>
+                    Running
+                  </>
                 ) : (
                   <>
-                    <Play className="h-4 w-4 fill-current translate-x-0.5" />
-                    <span>Simulate Agent Tool Call</span>
+                    <Play className="h-4 w-4" />
+                    Run
                   </>
                 )}
               </button>
 
-              {/* Simulation Result */}
-              {simulationResult && (
-                <div className="mt-5 pt-4 border-t-2 border-[#151617]/10">
-                  <div className="font-mono text-[10px] text-[#151617] font-bold uppercase mb-2 flex items-center justify-between">
-                    <span>// JSON-RPC 2.0 AGENT RESPONSE</span>
-                    <span className="px-2 py-0.5 rounded-[4px] bg-[#B09CFB] border border-[#151617] tabular-nums">200 OK</span>
-                  </div>
-                  <pre className="p-4 rounded-[10px] bg-[#0D0E0F] text-[#FAFAF9] font-mono text-[11px] border-2 border-[#151617] max-h-64 overflow-y-auto leading-relaxed ring-1 ring-white/10">
-                    {JSON.stringify(simulationResult, null, 2)}
-                  </pre>
-                </div>
-              )}
+              {simulationResult ? (
+                <pre className="mt-5 p-4 rounded-lg bg-[#0c0d0f] text-[#9c9c9d] font-mono text-[11px] border border-white/10 max-h-64 overflow-y-auto">
+                  {JSON.stringify(simulationResult, null, 2)}
+                </pre>
+              ) : null}
             </div>
           </div>
         </div>
 
-        {/* Embed Snippet Modal */}
-        {showEmbedModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-[#FAFAF9] border-2 border-[#151617] shadow-comic-xl rounded-[16px] max-w-2xl w-full p-6 sm:p-8 relative ring-1 ring-black/5">
-              <div className="flex items-center justify-between pb-4 border-b-2 border-[#151617]">
-                <h3 className="font-display text-2xl text-[#151617]">EMBED AGENTTAG SCRIPT</h3>
+        {showEmbedModal ? (
+          <div className="t-modal-scrim is-open" onClick={() => setShowEmbedModal(false)}>
+            <div
+              className="t-modal is-open bg-[#0c0d0f] border border-white/10 rounded-[14px] max-w-2xl w-full p-6 sm:p-8"
+              role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <h3 className="text-lg font-semibold">Script tag</h3>
                 <button
                   onClick={() => setShowEmbedModal(false)}
-                  className="font-mono text-xs font-bold text-[#151617] p-1.5 rounded-[6px] bg-[#FFBE98] border-2 border-[#151617] btn-press"
+                  className="text-sm text-[#9c9c9d] hover:text-white"
+                  type="button"
                 >
-                  [✕ CLOSE]
+                  Close
                 </button>
               </div>
 
               <div className="mt-6 space-y-6">
-                {/* 1. Script Tag */}
                 <div>
-                  <div className="font-mono text-xs font-bold uppercase tracking-wider text-[#151617] mb-2">
-                    01. Paste into &lt;head&gt; or &lt;body&gt;:
-                  </div>
+                  <div className="text-xs text-[#9c9c9d] mb-2">Paste into your site</div>
                   <div className="relative">
-                    <pre className="p-4 rounded-[10px] bg-[#F5F2F0] text-[#151617] font-mono text-xs overflow-x-auto border-2 border-[#151617]">
+                    <pre className="p-4 rounded-lg bg-white/5 text-white font-mono text-xs overflow-x-auto border border-white/10">
                       {scriptTagCode}
                     </pre>
                     <button
@@ -453,21 +427,19 @@ export default function StudioPage() {
                         setCopiedScript(true);
                         setTimeout(() => setCopiedScript(false), 2000);
                       }}
-                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-[36px] rounded-[8px] bg-[#FFBE98] text-[#151617] text-xs font-bold border-2 border-[#151617] shadow-comic-sm btn-press flex items-center gap-1"
+                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-9 rounded-md bg-white/10 text-xs border border-white/10 flex items-center gap-1"
+                      type="button"
                     >
                       {copiedScript ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      <span>{copiedScript ? "Copied" : "Copy"}</span>
+                      {copiedScript ? "Copied" : "Copy"}
                     </button>
                   </div>
                 </div>
 
-                {/* 2. Claude Config */}
                 <div>
-                  <div className="font-mono text-xs font-bold uppercase tracking-wider text-[#151617] mb-2">
-                    02. Add to claude_desktop_config.json:
-                  </div>
+                  <div className="text-xs text-[#9c9c9d] mb-2">Claude Desktop config</div>
                   <div className="relative">
-                    <pre className="p-4 rounded-[10px] bg-[#0D0E0F] text-[#4ECB71] font-mono text-xs overflow-x-auto border-2 border-[#151617] ring-1 ring-white/10">
+                    <pre className="p-4 rounded-lg bg-[#07080a] text-[#9c9c9d] font-mono text-xs overflow-x-auto border border-white/10">
                       {claudeConfigJson}
                     </pre>
                     <button
@@ -476,10 +448,11 @@ export default function StudioPage() {
                         setCopiedMcp(true);
                         setTimeout(() => setCopiedMcp(false), 2000);
                       }}
-                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-[36px] rounded-[8px] bg-[#B09CFB] text-[#151617] text-xs font-bold border-2 border-[#151617] shadow-comic-sm btn-press flex items-center gap-1"
+                      className="absolute top-2.5 right-2.5 px-3 py-1.5 min-h-9 rounded-md bg-white/10 text-xs border border-white/10 flex items-center gap-1"
+                      type="button"
                     >
                       {copiedMcp ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      <span>{copiedMcp ? "Copied" : "Copy"}</span>
+                      {copiedMcp ? "Copied" : "Copy"}
                     </button>
                   </div>
                 </div>
@@ -488,14 +461,15 @@ export default function StudioPage() {
               <div className="mt-8 flex justify-end">
                 <button
                   onClick={() => setShowEmbedModal(false)}
-                  className="px-6 py-2.5 min-h-[44px] rounded-[10px] bg-[#151617] text-[#FAFAF9] font-bold text-xs uppercase border-2 border-[#151617] btn-press"
+                  className="btn-keycap h-11 px-5 text-xs"
+                  type="button"
                 >
                   Done
                 </button>
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

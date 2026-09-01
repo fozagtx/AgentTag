@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch telemetry events" },
+      { success: false, error: "Couldn't load activity." },
       { status: 500 }
     );
   }
@@ -23,14 +23,26 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    if (!body.site_id || !body.tool_name) {
+      return NextResponse.json(
+        { success: false, error: "site_id and tool_name are required" },
+        { status: 400 }
+      );
+    }
+
+    const status =
+      body.status === "requires_approval" || body.status === "error" || body.status === "success"
+        ? body.status
+        : "success";
+
     const event = await recordTelemetryEvent({
-      site_id: body.site_id || "unknown",
-      site_title: body.site_title || "Web Resource",
-      tool_name: body.tool_name || "ping",
-      args: body.args || {},
-      client_type: body.client_type || "Claude Desktop",
-      status: body.status || "success",
-      duration_ms: body.duration_ms || Math.floor(Math.random() * 60) + 15,
+      site_id: String(body.site_id),
+      site_title: body.site_title ? String(body.site_title) : String(body.site_id),
+      tool_name: String(body.tool_name),
+      args: body.args && typeof body.args === "object" ? body.args : {},
+      client_type: body.client_type ? String(body.client_type) : "unknown",
+      status,
+      duration_ms: typeof body.duration_ms === "number" ? body.duration_ms : 0,
     });
 
     return NextResponse.json({
@@ -39,7 +51,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to record telemetry" },
+      { success: false, error: "Couldn't record this call." },
       { status: 500 }
     );
   }

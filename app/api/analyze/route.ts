@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { crawlUrl } from "@/lib/firecrawl";
+import { crawlUrl, CrawlError } from "@/lib/firecrawl";
 import { synthesizeTools } from "@/lib/synthesizer";
 import { saveSiteConfig } from "@/lib/db";
 import { SiteConfig, SiteType } from "@/lib/types";
@@ -25,15 +25,8 @@ export async function POST(req: NextRequest) {
       formattedUrl = "https://" + formattedUrl;
     }
 
-    console.log(`[WebMCP API] Analyzing URL: ${formattedUrl} (Type: ${site_type})`);
-
-    // 1. Crawl & extract page content
     const crawlResult = await crawlUrl(formattedUrl);
-
-    // 2. Synthesize MCP tools
     const tools = synthesizeTools(crawlResult, site_type as SiteType);
-
-    // 3. Create persistent site config
     const siteId = generateSiteId(site_type, formattedUrl);
     const siteConfig: SiteConfig = {
       site_id: siteId,
@@ -48,7 +41,6 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    // 4. Save to Neon DB / Memory Store
     await saveSiteConfig(siteConfig);
 
     return NextResponse.json({
@@ -59,9 +51,8 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("[WebMCP API] Analysis failed:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to analyze website." },
-      { status: 500 }
-    );
+    const message =
+      error instanceof CrawlError ? error.message : "Couldn't read this URL.";
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }

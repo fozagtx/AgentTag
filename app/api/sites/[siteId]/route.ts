@@ -3,15 +3,15 @@ import { getSiteConfig, saveSiteConfig, deleteSiteConfig } from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { siteId: string } }
+  { params }: { params: Promise<{ siteId: string }> }
 ) {
   try {
-    const siteId = params.siteId;
+    const { siteId } = await params;
     const config = await getSiteConfig(siteId);
 
     if (!config) {
       return NextResponse.json(
-        { success: false, error: "Site config not found in database" },
+        { success: false, error: "Site not found" },
         { status: 404 }
       );
     }
@@ -22,7 +22,7 @@ export async function GET(
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to retrieve site config" },
+      { success: false, error: "Couldn't load this site." },
       { status: 500 }
     );
   }
@@ -30,15 +30,15 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { siteId: string } }
+  { params }: { params: Promise<{ siteId: string }> }
 ) {
   try {
-    const siteId = params.siteId;
+    const { siteId } = await params;
     const existing = await getSiteConfig(siteId);
 
     if (!existing) {
       return NextResponse.json(
-        { success: false, error: "Site config not found in database" },
+        { success: false, error: "Site not found" },
         { status: 404 }
       );
     }
@@ -58,7 +58,7 @@ export async function PUT(
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to update site config" },
+      { success: false, error: "Couldn't update this site." },
       { status: 500 }
     );
   }
@@ -66,10 +66,10 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { siteId: string } }
+  { params }: { params: Promise<{ siteId: string }> }
 ) {
   try {
-    const siteId = params.siteId;
+    const { siteId } = await params;
     await deleteSiteConfig(siteId);
 
     return NextResponse.json({
@@ -78,7 +78,7 @@ export async function DELETE(
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to delete site" },
+      { success: false, error: "Couldn't delete this site." },
       { status: 500 }
     );
   }
