@@ -172,7 +172,9 @@ export default function IdeaCanvas() {
                   <span className="text-[11px] tabular-nums text-[#6f6f6f]">{items.length}</span>
                 </div>
                 {items.length === 0 ? (
-                  <p className="text-sm leading-6 text-[#6f6f6f]">{f.hint}. Empty until an agent or a dropped doc fills it.</p>
+                  <p className="text-sm leading-6 text-[#6f6f6f]">
+                    {f.id === "industry" ? f.hint : `${f.hint}. Empty until an agent or a dropped doc fills it.`}
+                  </p>
                 ) : (
                   <div className="flex flex-wrap gap-2.5">
                     {items.map((el) => (

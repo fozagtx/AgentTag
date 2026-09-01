@@ -1,4 +1,4 @@
-import { CanvasElement, ElementKind } from "./elements";
+import { CanvasElement, ElementKind, STARTER_INDUSTRIES } from "./elements";
 import { Idea, combineElements, ideasToMarkdown, pairKey, scamperIdea } from "./combine";
 
 export type CanvasState = {
@@ -7,9 +7,13 @@ export type CanvasState = {
   selectedId: string | null;
 };
 
-const KEY = "cofound-canvas-v3";
+const KEY = "cofound-canvas-v4";
 
-const empty = (): CanvasState => ({ pieces: [], ideas: [], selectedId: null });
+const empty = (): CanvasState => ({
+  pieces: [...STARTER_INDUSTRIES],
+  ideas: [],
+  selectedId: null,
+});
 
 let state: CanvasState = load();
 const listeners = new Set<() => void>();
@@ -20,8 +24,12 @@ function load(): CanvasState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return empty();
     const parsed = JSON.parse(raw);
+    const pieces = Array.isArray(parsed.pieces) ? parsed.pieces : [];
+    const withIndustries = pieces.some((p) => p.kind === "industry")
+      ? pieces
+      : [...pieces, ...STARTER_INDUSTRIES];
     return {
-      pieces: Array.isArray(parsed.pieces) ? parsed.pieces : [],
+      pieces: withIndustries,
       ideas: Array.isArray(parsed.ideas) ? parsed.ideas : [],
       selectedId: null,
     };

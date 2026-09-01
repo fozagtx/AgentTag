@@ -12,6 +12,19 @@ export const FIELDS: Array<{ id: ElementKind; label: string; hint: string }> = [
   { id: "wild", label: "Wild cards", hint: "A constraint or angle" },
 ];
 
+export const STARTER_INDUSTRIES: CanvasElement[] = [
+  { id: "i-health", name: "Health", kind: "industry" },
+  { id: "i-edu", name: "Education", kind: "industry" },
+  { id: "i-defense", name: "Defense", kind: "industry" },
+  { id: "i-finance", name: "Finance", kind: "industry" },
+  { id: "i-ent", name: "Entertainment", kind: "industry" },
+  { id: "i-sports", name: "Sports", kind: "industry" },
+  { id: "i-climate", name: "Climate", kind: "industry" },
+  { id: "i-legal", name: "Legal", kind: "industry" },
+  { id: "i-access", name: "Accessibility", kind: "industry" },
+  { id: "i-elder", name: "Eldercare", kind: "industry" },
+];
+
 /** Classify a name found in a dropped doc. Not shown until that name is in the file. */
 export const KIND_HINTS: Array<{ name: string; kind: ElementKind }> = [
   { name: "OpenAI", kind: "sponsor" },
