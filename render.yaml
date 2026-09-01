@@ -1,11 +1,4 @@
-# Render Blueprint: AgentTag web + relay
-# Docs: https://render.com/docs/blueprint-spec
-#
-# Shared secrets live in one Environment Group named `agenttag`.
-# Create that group in the Render dashboard and paste DATABASE_URL
-# and FIRECRAWL_API_KEY once. Do not put those values in this file
-# (Render ignores sync:false inside env groups).
-
+# Render Blueprint: AgentTag canvas (static Next app, no database)
 services:
   - type: web
     name: agenttag-web
@@ -15,24 +8,5 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm run start
     envVars:
-      - fromGroup: agenttag
       - key: NODE_ENV
         value: production
-      - key: NEXT_PUBLIC_RELAY_URL
-        value: https://agenttag-relay.onrender.com
-      - key: NEXT_PUBLIC_CDN_URL
-        value: https://agenttag-web.onrender.com
-
-  - type: web
-    name: agenttag-relay
-    runtime: node
-    plan: starter
-    region: oregon
-    buildCommand: npm install
-    startCommand: npm run relay
-    envVars:
-      - fromGroup: agenttag
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: "10000"

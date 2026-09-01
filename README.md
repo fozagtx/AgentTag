@@ -1,33 +1,32 @@
 # AgentTag
 
-<img src="public/logo.png" alt="AgentTag" width="72" height="72">
+An ideation canvas for first-time founders and hackathon teams.
 
-Add book a call to your portfolio in seconds.
+Combine sponsor tools with a problem space the way [The Hackathon Playbook](https://thehackathonplaybook.dev/playbook/ideation) combines elements. Download the ideas when you are done.
 
-Paste your site. AgentTag reads the page and gives agents a way to book a call. Then you drop one script tag on the site.
+No account. No database. State stays in the browser.
 
-## Getting started
+## Use it
 
 ```bash
 npm install
-cp .env.example .env.local
-# set DATABASE_URL
-# set FIRECRAWL_API_KEY if you need JS-rendered pages
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Dashboard: `/dashboard`.
+1. Click pieces onto the canvas (Twilio, Health, a sponsor from this weekend).
+2. Click two canvas pieces to combine them.
+3. Download the markdown.
 
-`book_call` uses a scheduler already on the page (Calendly, Cal.com, and similar). It does not invent a booking.
+## Web MCP
 
-## Scripts
+The page is the MCP server. Agents can call:
 
-| Command | What it runs |
-|---|---|
-| `npm run dev` | Next.js dev server |
-| `npm run build` | Production build |
-| `npm run start` | Serve the production build |
-| `npm run db:init` | Create tables against `DATABASE_URL` |
-| `npm run relay` | WebSocket / SSE relay |
+- `list_palette`
+- `add_element`
+- `combine`
+- `list_ideas`
+- `scamper`
+- `download_canvas`
+- `reset_canvas`
 
-Deploy notes: [DEPLOYMENT.md](DEPLOYMENT.md).
+via `window.WebMCP` or JSON-RPC `postMessage` (`tools/list`, `tools/call`).

@@ -1,194 +1,98 @@
 /**
- * WebMCP In-Browser Runtime Client v1.0.0
- * Turn any website into an AI-agent-ready MCP server with 1 script tag.
+ * In-page WebMCP host. Tools register from the canvas.
+ * Agents can call window.WebMCP or postMessage JSON-RPC.
  */
 (function () {
   if (window.__WEBMCP_INITIALIZED__) return;
   window.__WEBMCP_INITIALIZED__ = true;
 
-  // Extract site ID from script tag attribute
-  const currentScript =
-    document.currentScript ||
-    document.querySelector("script[data-site-id]") ||
-    document.querySelector('script[src*="client.js"]');
-  const siteId = currentScript ? currentScript.getAttribute("data-site-id") : null;
-  const relayUrl = currentScript?.getAttribute("data-relay-url") || "https://webmcp-relay.onrender.com";
+  const registry = new Map();
 
-  console.log("[WebMCP] Initializing runtime for site:", siteId || "inline");
-
-  const registry = {
-    tools: new Map(),
-    siteConfig: null,
-  };
-
-  // Public SDK exposed on window
   window.WebMCP = {
     registerTool: function (tool) {
-      registry.tools.set(tool.name, tool);
-      console.log(`[WebMCP] Registered tool: ${tool.name}`);
+      if (!tool || !tool.name) return;
+      registry.set(tool.name, tool);
     },
     getTools: function () {
-      return Array.from(registry.tools.values());
+      return Array.from(registry.values()).map((t) => ({
+        name: t.name,
+        description: t.description || "",
+        inputSchema: t.parameters || t.inputSchema || { type: "object", properties: {} },
+        requires_approval: !!t.requires_approval,
+      }));
     },
     executeTool: async function (toolName, args) {
-      const tool = registry.tools.get(toolName);
-      if (!tool) {
-        throw new Error(`Tool ${toolName} not found in WebMCP registry.`);
-      }
-
-      // Check Human-in-the-Loop (HITL) permission
+      const tool = registry.get(toolName);
+      if (!tool) throw new Error(`Unknown tool: ${toolName}`);
       if (tool.requires_approval) {
-        const approved = await showApprovalToast(toolName, args);
-        if (!approved) {
-          return { error: "Action cancelled by user in browser" };
-        }
+        const ok = await ask(toolName, args || {});
+        if (!ok) return { error: "Cancelled in the browser." };
       }
-
-      if (typeof tool.handler === "function") {
-        return await tool.handler(args);
-      }
-
-      // Default DOM execution strategies
-      if (tool.execution_type === "dom_search") {
-        return executeDomSearch(args.query);
-      }
-
-      return {
-        message: `Executed tool ${toolName}`,
-        args: args,
-        url: window.location.href,
-        title: document.title,
-      };
+      if (typeof tool.handler === "function") return await tool.handler(args || {});
+      throw new Error(`Tool ${toolName} has no handler.`);
     },
   };
 
-  // Perform in-page DOM search
-  function executeDomSearch(query) {
-    if (!query) return { results: [] };
-    const q = query.toLowerCase();
-    const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4, [role='heading']"));
-    const matches = [];
-
-    for (const h of headings) {
-      const text = h.innerText || h.textContent;
-      if (text && text.toLowerCase().includes(q)) {
-        // Grab following sibling paragraph or content
-        let content = "";
-        let sibling = h.nextElementSibling;
-        let count = 0;
-        while (sibling && count < 3) {
-          content += (sibling.innerText || sibling.textContent) + "\n";
-          sibling = sibling.nextElementSibling;
-          count++;
-        }
-        matches.push({
-          heading: text.trim(),
-          content: content.trim().slice(0, 500),
-          url: window.location.href + (h.id ? `#${h.id}` : ""),
-        });
-      }
-    }
-
-    return {
-      query: query,
-      total_matches: matches.length,
-      results: matches.slice(0, 5),
-    };
-  }
-
-  // Render on-screen Human-In-The-Loop (HITL) Toast
-  function showApprovalToast(toolName, args) {
+  function ask(toolName, args) {
     return new Promise((resolve) => {
       const existing = document.getElementById("webmcp-toast");
       if (existing) existing.remove();
-
       const toast = document.createElement("div");
       toast.id = "webmcp-toast";
-      toast.style.cssText = `
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 999999;
-        background: #111116;
-        color: #ffffff;
-        border: 1px solid #3b82f6;
-        border-radius: 12px;
-        padding: 16px 20px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        box-shadow: 0 12px 32px rgba(0,0,0,0.5);
-        max-width: 380px;
-        font-size: 14px;
-      `;
-
-      toast.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #60a5fa;">
-          <span>🤖 AI Agent Requesting Action</span>
-        </div>
-        <div style="font-size: 13px; color: #d1d5db; margin-bottom: 12px;">
-          Tool: <b style="color: #fff;">${toolName}</b><br>
-          <pre style="background: #1e1e24; padding: 6px; border-radius: 6px; margin-top: 6px; font-size: 11px; overflow-x: auto;">${JSON.stringify(args, null, 2)}</pre>
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 8px;">
-          <button id="webmcp-reject" style="background: #27272a; color: #e4e4e7; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">Reject</button>
-          <button id="webmcp-approve" style="background: #2563eb; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;">Approve</button>
-        </div>
-      `;
-
+      toast.style.cssText =
+        "position:fixed;bottom:24px;right:24px;z-index:999999;background:#111;color:#fff;border:1px solid rgba(255,107,74,.5);border-radius:12px;padding:16px 20px;font:14px/1.4 Inter,sans-serif;max-width:360px;";
+      toast.innerHTML =
+        "<div style='font-weight:600;margin-bottom:8px'>Agent wants to run " +
+        escapeHtml(toolName) +
+        "</div><pre style='font-size:11px;background:#1a1a1a;padding:8px;border-radius:8px;overflow:auto'>" +
+        escapeHtml(JSON.stringify(args, null, 2)) +
+        "</pre><div style='display:flex;gap:8px;justify-content:flex-end;margin-top:12px'><button id='webmcp-no' style='background:#222;color:#ddd;border:0;padding:8px 12px;border-radius:8px'>No</button><button id='webmcp-yes' style='background:#e6e6e6;color:#2f3031;border:0;padding:8px 12px;border-radius:8px;font-weight:600'>Yes</button></div>";
       document.body.appendChild(toast);
-
-      document.getElementById("webmcp-approve").onclick = () => {
+      document.getElementById("webmcp-yes").onclick = () => {
         toast.remove();
         resolve(true);
       };
-      document.getElementById("webmcp-reject").onclick = () => {
+      document.getElementById("webmcp-no").onclick = () => {
         toast.remove();
         resolve(false);
       };
     });
   }
 
-  // Render floating "Agent-Ready" badge
-  function renderBadge() {
-    if (document.getElementById("webmcp-badge")) return;
-    const badge = document.createElement("div");
-    badge.id = "webmcp-badge";
-    badge.title = "This site is WebMCP Agent-Ready";
-    badge.style.cssText = `
-      position: fixed;
-      bottom: 16px;
-      left: 16px;
-      z-index: 999990;
-      background: rgba(17, 17, 22, 0.85);
-      backdrop-filter: blur(8px);
-      color: #93c5fd;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      border-radius: 20px;
-      padding: 6px 12px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 11px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      transition: all 0.2s ease;
-    `;
-    badge.innerHTML = `<span style="display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span> Agent-Ready`;
-    badge.onmouseenter = () => (badge.style.borderColor = "#3b82f6");
-    badge.onmouseleave = () => (badge.style.borderColor = "rgba(59, 130, 246, 0.3)");
-    badge.onclick = () => {
-      alert(`[WebMCP]\nSite ID: ${siteId || "Inline"}\nRegistered Tools: ${Array.from(registry.tools.keys()).join(", ") || "Auto-detecting"}`);
-    };
-    document.body.appendChild(badge);
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
   }
 
-  // Initialize and register default DOM hooks
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      renderBadge();
-    });
-  } else {
-    renderBadge();
-  }
+  window.addEventListener("message", async (event) => {
+    const msg = event.data;
+    if (!msg || msg.jsonrpc !== "2.0" || typeof msg.method !== "string") return;
+    const id = msg.id;
+    const reply = (result, error) => {
+      const payload = error
+        ? { jsonrpc: "2.0", id, error }
+        : { jsonrpc: "2.0", id, result };
+      if (event.source && event.source.postMessage) {
+        event.source.postMessage(payload, event.origin || "*");
+      }
+    };
+    try {
+      if (msg.method === "tools/list") {
+        reply({ tools: window.WebMCP.getTools() });
+        return;
+      }
+      if (msg.method === "tools/call") {
+        const name = msg.params?.name;
+        const args = msg.params?.arguments || msg.params?.args || {};
+        const out = await window.WebMCP.executeTool(name, args);
+        reply({ content: [{ type: "text", text: JSON.stringify(out) }] });
+        return;
+      }
+      reply(null, { code: -32601, message: "Unknown method" });
+    } catch (err) {
+      reply(null, { code: -32000, message: err.message || "Tool failed" });
+    }
+  });
 })();

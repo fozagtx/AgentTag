@@ -91,6 +91,45 @@ body {
   cursor: not-allowed;
 }
 
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.chip:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.chip-sponsor {
+  border-color: rgba(255, 179, 71, 0.35);
+}
+
+.chip-tech {
+  border-color: rgba(255, 107, 74, 0.3);
+}
+
+.chip-industry {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.chip-wild {
+  border-color: rgba(255, 47, 58, 0.28);
+}
+
+.chip.is-on {
+  background: rgba(255, 107, 74, 0.18);
+  border-color: #ff6b4a;
+}
+
 .pill-nav {
   background: rgba(7, 8, 10, 0.62);
   backdrop-filter: blur(18px);

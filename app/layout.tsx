@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
-import AppChrome from "@/components/AppChrome";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,26 +18,23 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentTag | Add book a call to your portfolio",
-  description: "Paste your portfolio. Agents can book a call from it.",
+  title: "AgentTag | Ideation canvas",
+  description: "Combine sponsor tools into an idea you can ship. Download it when you are done.",
   icons: {
     icon: "/logo.png",
     apple: "/apple-touch-icon.png",
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body
         className={`${inter.variable} ${jetbrains.variable} min-h-screen bg-[#07080a] text-white antialiased selection:bg-[#ff6b4a] selection:text-white`}
         style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}
       >
-        <AppChrome>{children}</AppChrome>
+        <Script src="/client.js" strategy="afterInteractive" />
+        {children}
       </body>
     </html>
   );
