@@ -2,57 +2,42 @@
 
 ## Inspiration
 
-First-time founders and hackathon teams still brainstorm in a Google doc or a group chat. Sponsor lists live in a PDF.
+We kept watching teams open a blank Google doc at 8pm on Friday and argue about ideas until Saturday. The sponsor list was in a PDF nobody read. If you wanted an agent in the loop, you had to explain the whole board again in chat.
 
-Cofound is a Web MCP native ideation canvas. A person and an agent share one board: add stacks, combine two pieces, download the result.
+We built Cofound so the board is the thing. You mix stacks on it. An agent can mix them too, because the page speaks Web MCP.
 
 ## What it does
 
-Cofound is a Web MCP native ideation canvas in the browser.
+Cofound is a Web MCP native ideation canvas.
 
-The board has three fields. **Sponsors** is for this event’s tools and APIs. It starts empty. An agent can fill it with `add_element` or `ingest_doc`, or you drop a `.txt`, `.md`, or `.html` sponsor list. **Industries** starts with problem spaces: Health, Education, Defense, Finance, Entertainment, Sports, Climate, Legal, Accessibility, Eldercare. **Wild cards** is for a constraint or angle. It also starts empty.
+You get three columns: Sponsors, Industries, and Wild cards. Industries already has the usual problem spaces (health, education, finance, and so on). Sponsors and Wild cards start empty, because those should come from this weekend, not from a generic list we guessed.
 
-Click one piece, then another, to combine them. The idea is built from those two names. Optional SCAMPER expands the idea in seven directions. Download writes a markdown file of the canvas.
-
-There is no account and no database. State stays in `localStorage`.
+Add a name, drop a text or markdown sponsor sheet, or let an agent add pieces. Click two chips to combine them. Hit Download when you have something you want to keep.
 
 Live: https://cofound-wzks.onrender.com
 
 ## How we built it
 
-Next.js 16 and React 19, client only. Pieces and ideas sit in a small store persisted to `localStorage`. Combinations are structured from the two pieces you picked.
+It is a Next.js app that runs in the browser. No database. The board is saved in localStorage.
 
-Web MCP is registered on the page. Agents use `window.WebMCP` or JSON-RPC `postMessage` (`tools/list`, `tools/call`):
+Web MCP is on the page, so an agent can list the columns, add a stack, ingest a doc, combine two pieces, run SCAMPER, and download. Download and reset ask you first, because wiping someone’s board without asking is rude.
 
-- `list_palette` lists what is in the three fields
-- `add_element` puts a named stack into Sponsors, Industries, or Wild cards
-- `ingest_doc` reads hackathon or sponsor text and registers stacks that actually appear in that text
-- `combine` mixes two pieces by name
-- `list_ideas` returns the board
-- `scamper` runs SCAMPER on an idea
-- `download_canvas` downloads markdown (asks in the browser first)
-- `reset_canvas` clears the board (asks first)
-
-The UI is light. The three fields have different colors so you can tell them apart: amber for Sponsors, teal for Industries, purple for Wild cards.
+The three columns are different colors on purpose: amber, teal, purple. You can see which pile a chip came from.
 
 ## Challenges we ran into
 
-Prefilling every popular sponsor made the board look like a catalog for a hackathon that was not happening. Clearing those chips then hid the three fields. The split that works: Industries as a starter set, Sponsors and Wild cards filled from this event.
+We stuffed the board with every sponsor we could think of. It looked busy and it was wrong for any real event. Then we deleted too much and the three columns disappeared. We put Industries back as a starter set and left Sponsors for the actual hackathon.
 
-PDF drop does not parse in the browser. Ingest is text, markdown, and HTML. A prize PDF has to be saved as one of those first.
-
-Hydration also bit us. The board reads `localStorage`, so the first paint has to match the server. The empty snapshot for that first paint is cached so React does not loop.
+Dropping a PDF still does not work in the browser. You need a txt, md, or html export.
 
 ## Accomplishments that we're proud of
 
-A live Web MCP native ideation canvas. Eight tools on the page. Download writes a markdown file. Combine is a click on the board and a `combine` call.
+It is live. A person and an agent use the same board. You can leave with a markdown file.
 
 ## What we learned
 
-The tools and the UI share one store. `add_element` writes the same pieces the plus button writes.
-
-Industries ships with the problem spaces. Sponsors and Wild cards stay empty until this event’s stacks are added.
+Put the agent on the same board as the human. One store, one set of clicks.
 
 ## What's next for Cofound
 
-Read sponsor PDFs in the browser. Make `ingest_doc` better at prize pages and Devpost copy.
+PDF drop, and better ingest when someone pastes a prize page.
