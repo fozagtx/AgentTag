@@ -18,7 +18,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentTag | Ideation canvas",
+  title: "CoFound | Ideation canvas",
   description: "Combine sponsor tools into an idea you can ship. Download it when you are done.",
   icons: {
     icon: "/logo.png",

@@ -18,7 +18,7 @@ export function BrandMark({
       href={href}
       onClick={onClick}
       className={`flex items-center shrink-0 ${compact ? "justify-center" : "gap-2.5"}`}
-      aria-label="AgentTag"
+      aria-label="CoFound"
     >
       <img
         src="/logo.png"
@@ -29,7 +29,7 @@ export function BrandMark({
       />
       {compact ? null : (
         <span className={`text-sm font-semibold tracking-tight ${light ? "text-[#161616]" : "text-white"}`}>
-          AgentTag
+          CoFound
         </span>
       )}
     </Link>

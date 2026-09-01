@@ -8,7 +8,8 @@ export type CanvasState = {
   customName: string;
 };
 
-const KEY = "agenttag-canvas-v1";
+const KEY = "cofound-canvas-v1";
+const LEGACY_KEY = "agenttag-canvas-v1";
 
 let state: CanvasState = load();
 const listeners = new Set<() => void>();
@@ -18,7 +19,7 @@ function load(): CanvasState {
     return { workspace: [], ideas: [], selectedId: null, customName: "" };
   }
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY);
     if (!raw) return { workspace: [], ideas: [], selectedId: null, customName: "" };
     const parsed = JSON.parse(raw);
     return {

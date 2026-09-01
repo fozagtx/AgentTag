@@ -1,7 +1,7 @@
-# Render Blueprint: AgentTag canvas (static Next app, no database)
+# Render Blueprint: CoFound canvas (static Next app, no database)
 services:
   - type: web
-    name: agenttag-web
+    name: cofound
     runtime: node
     plan: starter
     region: oregon

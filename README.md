@@ -1,4 +1,4 @@
-# AgentTag
+# CoFound
 
 An ideation canvas for first-time founders and hackathon teams.
 
