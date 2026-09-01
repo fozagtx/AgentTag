@@ -30,16 +30,44 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) or the live app: [cofound-wzks.onrender.com](https://cofound-wzks.onrender.com).
 
-## Usage
+## If you are new
 
-1. Put stacks in the fields (type, drop a doc, or let an agent add them).
-2. Click one piece, then another, to combine them.
-3. **Push with SCAMPER**.
-4. **Download**.
+You are looking at three columns.
 
-Double-click a piece to remove it. **Clear** resets the board. Industries come back as the starter set.
+1. **Sponsors** (amber) is empty. Type this weekend’s tools, drop a txt/md/html sponsor list, or ask an agent to add them.
+2. **Industries** (teal) already has Health, Education, and the rest. Click one.
+3. **Wild cards** (purple) is empty. Add a constraint. Example: Voice-only.
+4. Click a chip in one column, then a chip in another. That is a combine. An idea appears under **Ideas**.
+5. Click **Push with SCAMPER** on that idea.
+6. Click **Download** for `ideation-canvas.md`.
+
+Double-click a chip to remove it. **Clear** resets the board. Industries come back.
+
+## If you are an agent
+
+Open the Cofound page first. Then follow this:
+
+```
+You are on Cofound, a Web MCP native ideation canvas. Use the page tools.
+
+Fields:
+- sponsor: event tools and APIs (starts empty)
+- industry: problem spaces (already filled)
+- wild: constraints (starts empty)
+
+Do this:
+1. list_palette
+2. add_element for each sponsor I name, kind=sponsor
+3. add_element for each wild card I name, kind=wild
+4. combine a sponsor with an industry
+5. list_ideas
+6. scamper on the idea id you just got
+7. Stop. Do not reset_canvas unless I say so. Do not download unless I say so.
+
+If I paste a sponsor list or hackathon text, call ingest_doc with that text instead of guessing names.
+```
 
 ## Web MCP
 
