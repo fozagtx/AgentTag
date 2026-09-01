@@ -203,7 +203,7 @@ export default function DashboardPage() {
           className="btn-keycap min-h-[44px] px-5 flex items-center gap-2 disabled:opacity-50"
         >
           {isScanning ? <Cpu className="h-4 w-4 animate-spin-fast" /> : <ArrowRight className="h-4 w-4" />}
-          <span>{isScanning ? "Working" : "Add portfolio"}</span>
+          <span>{isScanning ? "Working" : "Add"}</span>
         </button>
       </div>
     </form>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
             type="button"
           >
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add portfolio</span>
+            <span className="hidden sm:inline">Add</span>
           </button>
         </header>
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 max-w-[1400px] w-full mx-auto">
@@ -254,9 +254,9 @@ export default function DashboardPage() {
             </div>
           ) : isEmpty ? (
             <div className="max-w-lg mx-auto sm:mx-0 rounded-[14px] border border-[#e8e8e4] bg-white p-6 sm:p-8">
-              <h2 className="text-xl font-semibold">Add your portfolio</h2>
+              <h2 className="text-xl font-semibold">Add book a call</h2>
               <p className="text-sm text-[#6f6f6f] mt-2 mb-6">
-                Paste your site. Agents get search_work, get_projects, and book_call.
+                Paste your portfolio URL.
               </p>
               {addSiteForm("add-site-url")}
             </div>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between pb-3 border-b border-[#e8e8e4]">
-            <h3 id="add-site-title" className="text-lg font-semibold">Add your portfolio</h3>
+            <h3 id="add-site-title" className="text-lg font-semibold">Add book a call</h3>
             <button
               onClick={() => setShowAddModal(false)}
               className="text-sm text-[#6f6f6f] hover:text-[#161616] min-h-9 px-2"

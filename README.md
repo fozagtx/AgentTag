@@ -2,15 +2,9 @@
 
 <img src="public/logo.png" alt="AgentTag" width="72" height="72">
 
-Portfolio tools so an agent can see your work and book a call.
+Add book a call to your portfolio in seconds.
 
-Paste your portfolio URL. AgentTag reads the page and registers three tools:
-
-- `search_work`
-- `get_projects`
-- `book_call`
-
-Then you drop one script tag on the site.
+Paste your site. AgentTag reads the page and gives agents a way to book a call. Then you drop one script tag on the site.
 
 ## Getting started
 

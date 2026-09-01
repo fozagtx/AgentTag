@@ -18,9 +18,8 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentTag | Portfolio tools so agents can book a call",
-  description:
-    "Paste your portfolio. AgentTag reads the page and gives agents tools to search your work, list projects, and book a call.",
+  title: "AgentTag | Add book a call to your portfolio",
+  description: "Paste your portfolio. Agents can book a call from it.",
   icons: {
     icon: "/logo.png",
     apple: "/apple-touch-icon.png",
