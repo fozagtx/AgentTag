@@ -2,19 +2,19 @@
 
 <img src="public/logo.png" alt="CoFound" width="72" height="72">
 
-Web MCP native ideation canvas. Two pieces make one idea.
+Web MCP native ideation canvas.
 
 Live: [cofound-wzks.onrender.com](https://cofound-wzks.onrender.com)
 
-Three fields: **Sponsors**, **Industries**, **Wild cards**. Click two chips to combine them. Download the board when you are done. An agent can run the same moves on the page.
+The board has three fields: **Sponsors**, **Industries**, and **Wild cards**. Click two chips to combine them. Download saves the board as markdown. An agent can run the same actions on the page through Web MCP.
 
-Industries ships with Health, Education, Defense, Finance, Entertainment, Sports, Climate, Legal, Accessibility, Eldercare. Sponsors and Wild cards start empty. Add this weekend’s tools by typing, dropping a `.txt` / `.md` / `.html` list, or an agent calling `add_element` / `ingest_doc`.
+Industries starts with Health, Education, Defense, Finance, Entertainment, Sports, Climate, Legal, Accessibility, and Eldercare. Sponsors and Wild cards start empty. Add stacks by typing a name, dropping a `.txt`, `.md`, or `.html` file, or having an agent call `add_element` or `ingest_doc`.
 
 ## Features
 
-- Two pieces make one idea
-- Three colored fields (amber / teal / purple)
-- Drop a hackathon or sponsor doc to register stacks named in that file
+- Combine two chips into an idea
+- Three fields: Sponsors (amber), Industries (teal), Wild cards (purple)
+- Drop a txt, md, or html file to add stacks named in that file
 - SCAMPER on an idea
 - Download `ideation-canvas.md`
 - Web MCP on the page
@@ -34,24 +34,25 @@ Open [http://localhost:3000](http://localhost:3000) or the live app: [cofound-wz
 
 ## If you are new
 
-You are looking at three columns.
+The board is three columns.
 
-1. **Sponsors** (amber) is empty. Type this weekend’s tools, drop a txt/md/html sponsor list, or ask an agent to add them.
-2. **Industries** (teal) already has Health, Education, and the rest. Click one.
-3. **Wild cards** (purple) is empty. Add a constraint. Example: Voice-only.
-4. Click a chip in one column, then a chip in another. That is a combine. An idea appears under **Ideas**.
+1. **Sponsors** (amber) starts empty. Type a tool name, drop a txt/md/html sponsor list, or ask an agent to add them.
+2. **Industries** (teal) already has Health, Education, Defense, Finance, Entertainment, Sports, Climate, Legal, Accessibility, and Eldercare.
+3. **Wild cards** (purple) starts empty. Add a constraint such as Voice-only.
+4. Click a chip in one column, then a chip in another. The idea shows up under **Ideas**.
 5. Click **Push with SCAMPER** on that idea.
 6. Click **Download** for `ideation-canvas.md`.
 
-Double-click a chip to remove it. **Clear** resets the board. Industries come back.
+Double-click a chip to remove it. **Clear** resets the board and restores the industry list.
 
 ## Use it in Codex
 
-1. Open https://cofound-wzks.onrender.com in Codex.
-2. Paste:
+1. Open Codex.
+2. Enter https://cofound-wzks.onrender.com in the Codex browser. The agent cannot open the page itself.
+3. Paste this:
 
 ```
-Sponsors: Twilio, Groq. For Health. Weekend only. Put them on the board and combine.
+Hello, I want to create a little prototype. I have an OpenAI API and a social API. Let's ideate what I can build.
 ```
 
 ## Web MCP
