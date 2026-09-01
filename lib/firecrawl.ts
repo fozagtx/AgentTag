@@ -8,13 +8,14 @@ export class CrawlError extends Error {
   }
 }
 
+const FIRECRAWL_RETRYABLE = new Set([408, 429, 500, 502, 503, 504]);
+
 export async function crawlUrl(targetUrl: string): Promise<CrawlResult> {
   const apiKey = process.env.FIRECRAWL_API_KEY?.trim();
 
   if (apiKey) {
     const scraped = await scrapeWithFirecrawl(targetUrl, apiKey);
     if (scraped) return scraped;
-    throw new CrawlError("Firecrawl could not read this URL.");
   }
 
   const fetched = await scrapeWithFetch(targetUrl);
@@ -24,27 +25,52 @@ export async function crawlUrl(targetUrl: string): Promise<CrawlResult> {
 }
 
 async function scrapeWithFirecrawl(targetUrl: string, apiKey: string): Promise<CrawlResult | null> {
-  const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      url: targetUrl,
-      formats: ["markdown", "html"],
-    }),
-  });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          url: targetUrl,
+          formats: ["markdown", "html"],
+          timeout: 30000,
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
 
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    const detail =
-      payload?.error ||
-      payload?.message ||
-      `Firecrawl returned ${response.status}`;
-    throw new CrawlError(String(detail));
+      const payload = await response.json().catch(() => null);
+      if (response.ok && payload && payload.success !== false) {
+        const parsed = parseFirecrawlPayload(targetUrl, payload);
+        if (parsed) return parsed;
+        return null;
+      }
+
+      const detail =
+        payload?.error ||
+        payload?.message ||
+        `status ${response.status}`;
+      console.error(`[crawl] Firecrawl attempt ${attempt + 1} failed:`, detail);
+
+      if (!FIRECRAWL_RETRYABLE.has(response.status)) return null;
+    } catch (err) {
+      console.error(
+        `[crawl] Firecrawl attempt ${attempt + 1} failed:`,
+        err instanceof Error ? err.message : err
+      );
+    }
+
+    if (attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 400 * 2 ** attempt));
+    }
   }
 
+  return null;
+}
+
+function parseFirecrawlPayload(targetUrl: string, payload: any): CrawlResult | null {
   const data = payload?.data || payload || {};
   const markdown = cleanMarkdownContent(data.markdown || "");
   if (!markdown) return null;
