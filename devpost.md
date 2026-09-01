@@ -2,42 +2,40 @@
 
 ## Inspiration
 
-We kept watching teams open a blank Google doc at 8pm on Friday and argue about ideas until Saturday. The sponsor list was in a PDF nobody read. If you wanted an agent in the loop, you had to explain the whole board again in chat.
-
-We built Cofound so the board is the thing. You mix stacks on it. An agent can mix them too, because the page speaks Web MCP.
+Hackathon ideation is usually a blank doc plus a sponsor PDF. We wanted a board you can actually mix on, and we wanted an agent to sit on that same board through Web MCP. That is Cofound: a Web MCP native ideation canvas.
 
 ## What it does
 
-Cofound is a Web MCP native ideation canvas.
+Three columns: Sponsors, Industries, Wild cards.
 
-You get three columns: Sponsors, Industries, and Wild cards. Industries already has the usual problem spaces (health, education, finance, and so on). Sponsors and Wild cards start empty, because those should come from this weekend, not from a generic list we guessed.
+Industries already has health, education, finance, defense, and the rest. Sponsors and Wild cards start empty so you (or an agent) can add this weekend’s tools.
 
-Add a name, drop a text or markdown sponsor sheet, or let an agent add pieces. Click two chips to combine them. Hit Download when you have something you want to keep.
+Type a name, drop a txt/md/html list, or let the agent add pieces. Click two chips to combine them. Download saves a markdown file.
 
-Live: https://cofound-wzks.onrender.com
+https://cofound-wzks.onrender.com
 
 ## How we built it
 
-It is a Next.js app that runs in the browser. No database. The board is saved in localStorage.
+Next.js in the browser. No database. The board lives in localStorage.
 
-Web MCP is on the page, so an agent can list the columns, add a stack, ingest a doc, combine two pieces, run SCAMPER, and download. Download and reset ask you first, because wiping someone’s board without asking is rude.
+Web MCP is registered on the page. An agent can add a stack, ingest a doc, combine two pieces, run SCAMPER, and download. Download and reset ask before they run.
 
-The three columns are different colors on purpose: amber, teal, purple. You can see which pile a chip came from.
+Sponsors is amber, Industries is teal, Wild cards is purple.
 
 ## Challenges we ran into
 
-We stuffed the board with every sponsor we could think of. It looked busy and it was wrong for any real event. Then we deleted too much and the three columns disappeared. We put Industries back as a starter set and left Sponsors for the actual hackathon.
+We preloaded a huge sponsor list and the UI looked packed. Then we stripped it and lost the three columns. Industries is back as a starter set. Sponsors wait for the real event.
 
-Dropping a PDF still does not work in the browser. You need a txt, md, or html export.
+PDF drop still fails in the browser. Use txt, md, or html.
 
 ## Accomplishments that we're proud of
 
-It is live. A person and an agent use the same board. You can leave with a markdown file.
+It is live. You and an agent use the same canvas. You can download the ideas.
 
 ## What we learned
 
-Put the agent on the same board as the human. One store, one set of clicks.
+Make it agent native and human native in one. People click the board. Agents call Web MCP. Same canvas.
 
 ## What's next for Cofound
 
-PDF drop, and better ingest when someone pastes a prize page.
+PDF drop. Better ingest for prize pages.
