@@ -2,7 +2,7 @@
 
 <img src="public/logo.png" alt="CoFound" width="72" height="72">
 
-Web MCP native ideation canvas. Mix stacks the way [Little Alchemy](https://littlealchemy.com/) mixes elements: two pieces make one idea.
+Web MCP native ideation canvas. Two pieces make one idea.
 
 Live: [cofound-wzks.onrender.com](https://cofound-wzks.onrender.com)
 
@@ -12,7 +12,7 @@ Industries ships with Health, Education, Defense, Finance, Entertainment, Sports
 
 ## Features
 
-- Little Alchemy combine: two pieces, one idea
+- Two pieces make one idea
 - Three colored fields (amber / teal / purple)
 - Drop a hackathon or sponsor doc to register stacks named in that file
 - SCAMPER on an idea
@@ -35,7 +35,7 @@ Open the URL Next prints (often [http://localhost:3000](http://localhost:3000)).
 ## Usage
 
 1. Put stacks in the fields (type, drop a doc, or let an agent add them).
-2. Click one piece, then another, to combine them like Little Alchemy.
+2. Click one piece, then another, to combine them.
 3. Optional: **Push with SCAMPER**.
 4. **Download**.
 
