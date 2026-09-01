@@ -10,7 +10,7 @@ The method is [Little Alchemy ideation](https://thehackathonplaybook.dev/playboo
 
 ## Features
 
-- Empty canvas on purpose. An agent fills stacks with `add_element`, or you drop a sponsor / hackathon doc
+- Three fields: Sponsors, Industries, Wild cards. Empty until an agent or a dropped doc fills them
 - Type a stack in the header if you want to add one by hand
 - Click two pieces on the canvas to combine them into an idea
 - SCAMPER on an idea when you want to push it

@@ -26,21 +26,26 @@ export const CANVAS_TOOLS: McpTool[] = [
     name: "list_palette",
     description: "List tech, sponsor, industry, and wild-card pieces on the ideation canvas.",
     inputSchema: { type: "object", properties: {} },
-    handler: () => ({
-      workspace: getCanvasState().workspace.map((el) => ({ name: el.name, kind: el.kind })),
-    }),
+    handler: () => {
+      const pieces = getCanvasState().pieces;
+      return {
+        sponsors: pieces.filter((el) => el.kind === "sponsor").map((el) => el.name),
+        industries: pieces.filter((el) => el.kind === "industry").map((el) => el.name),
+        wild: pieces.filter((el) => el.kind === "wild").map((el) => el.name),
+      };
+    },
   },
   {
     name: "add_element",
-    description: "Add a piece to the canvas. Use this for a sponsor tool the event actually has.",
+    description: "Add a piece into one of the three fields: sponsor, industry, or wild.",
     inputSchema: {
       type: "object",
       properties: {
         name: { type: "string", description: "Name of the tool, industry, or constraint" },
         kind: {
           type: "string",
-          enum: ["tech", "sponsor", "industry", "wild"],
-          description: "sponsor for event APIs, industry for problem spaces",
+          enum: ["sponsor", "industry", "wild"],
+          description: "Which of the three fields: sponsor, industry, or wild",
         },
       },
       required: ["name"],

@@ -58,13 +58,13 @@ export function ideasToMarkdown(ideas: Idea[]): string {
 
 function pitchFor(a: CanvasElement, b: CanvasElement): string {
   const kinds = [a.kind, b.kind].sort().join("+");
-  if (kinds === "industry+sponsor" || kinds === "industry+tech") {
+  if (kinds === "industry+sponsor") {
     const tech = a.kind === "industry" ? b : a;
     const industry = a.kind === "industry" ? a : b;
     const an = /^[aeiou]/i.test(tech.name) ? "An" : "A";
     return `${an} ${tech.name} product for ${industry.name}. Pick one slow, manual job in ${industry.name} and do it with ${tech.name} in a weekend.`;
   }
-  if (kinds === "sponsor+tech" || kinds === "tech+tech" || kinds === "sponsor+sponsor") {
+  if (kinds === "sponsor+sponsor") {
     return `Pipe ${a.name} into ${b.name} as one flow. The demo is the handoff between them.`;
   }
   if (kinds === "industry+wild") {
@@ -72,7 +72,7 @@ function pitchFor(a: CanvasElement, b: CanvasElement): string {
     const wild = a.kind === "wild" ? a : b;
     return `${industry.name} with a ${wild.name} constraint. The constraint is the product.`;
   }
-  if (kinds === "sponsor+wild" || kinds === "tech+wild") {
+  if (kinds === "sponsor+wild") {
     const tool = a.kind === "wild" ? b : a;
     const wild = a.kind === "wild" ? a : b;
     return `Build with ${tool.name} under ${wild.name}. Judges remember the constraint.`;

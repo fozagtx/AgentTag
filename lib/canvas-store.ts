@@ -2,42 +2,37 @@ import { CanvasElement, ElementKind } from "./elements";
 import { Idea, combineElements, ideasToMarkdown, pairKey, scamperIdea } from "./combine";
 
 export type CanvasState = {
-  workspace: CanvasElement[];
+  pieces: CanvasElement[];
   ideas: Idea[];
   selectedId: string | null;
-  customName: string;
 };
 
-const KEY = "cofound-canvas-v2";
+const KEY = "cofound-canvas-v3";
+
+const empty = (): CanvasState => ({ pieces: [], ideas: [], selectedId: null });
 
 let state: CanvasState = load();
 const listeners = new Set<() => void>();
 
 function load(): CanvasState {
-  if (typeof window === "undefined") {
-    return { workspace: [], ideas: [], selectedId: null, customName: "" };
-  }
+  if (typeof window === "undefined") return empty();
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { workspace: [], ideas: [], selectedId: null, customName: "" };
+    if (!raw) return empty();
     const parsed = JSON.parse(raw);
     return {
-      workspace: Array.isArray(parsed.workspace) ? parsed.workspace : [],
+      pieces: Array.isArray(parsed.pieces) ? parsed.pieces : [],
       ideas: Array.isArray(parsed.ideas) ? parsed.ideas : [],
       selectedId: null,
-      customName: "",
     };
   } catch {
-    return { workspace: [], ideas: [], selectedId: null, customName: "" };
+    return empty();
   }
 }
 
 function persist() {
   if (typeof window === "undefined") return;
-  localStorage.setItem(
-    KEY,
-    JSON.stringify({ workspace: state.workspace, ideas: state.ideas })
-  );
+  localStorage.setItem(KEY, JSON.stringify({ pieces: state.pieces, ideas: state.ideas }));
 }
 
 function emit(next: CanvasState) {
@@ -55,27 +50,27 @@ export function subscribeCanvas(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
-export function addToWorkspace(el: CanvasElement): CanvasState {
-  if (state.workspace.some((w) => w.id === el.id)) return state;
-  emit({ ...state, workspace: [...state.workspace, el] });
-  return state;
+function normalizeKind(kind: string): ElementKind {
+  if (kind === "industry") return "industry";
+  if (kind === "wild") return "wild";
+  return "sponsor";
 }
 
-export function addCustomElement(name: string, kind: ElementKind = "sponsor"): CanvasElement {
+export function addCustomElement(name: string, kind: string = "sponsor"): CanvasElement {
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Name is required.");
-  const existing = state.workspace.find((w) => w.name.toLowerCase() === trimmed.toLowerCase());
+  const existing = state.pieces.find((w) => w.name.toLowerCase() === trimmed.toLowerCase());
   if (existing) return existing;
   const el: CanvasElement = {
     id: `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
     name: trimmed,
-    kind,
+    kind: normalizeKind(kind),
   };
-  addToWorkspace(el);
+  emit({ ...state, pieces: [...state.pieces, el] });
   return el;
 }
 
-export function addMany(items: Array<{ name: string; kind: ElementKind }>): CanvasElement[] {
+export function addMany(items: Array<{ name: string; kind: string }>): CanvasElement[] {
   const added: CanvasElement[] = [];
   for (const item of items) {
     added.push(addCustomElement(item.name, item.kind));
@@ -83,23 +78,23 @@ export function addMany(items: Array<{ name: string; kind: ElementKind }>): Canv
   return added;
 }
 
-export function removeFromWorkspace(id: string): void {
+export function removePiece(id: string): void {
   emit({
     ...state,
-    workspace: state.workspace.filter((w) => w.id !== id),
+    pieces: state.pieces.filter((w) => w.id !== id),
     selectedId: state.selectedId === id ? null : state.selectedId,
   });
 }
 
-export function selectWorkspace(id: string | null): void {
+export function selectPiece(id: string | null): void {
   emit({ ...state, selectedId: id });
 }
 
 export function combineById(idA: string, idB: string): Idea {
   if (idA === idB) throw new Error("Pick two different pieces.");
-  const a = state.workspace.find((w) => w.id === idA);
-  const b = state.workspace.find((w) => w.id === idB);
-  if (!a || !b) throw new Error("Both pieces need to be on the canvas.");
+  const a = state.pieces.find((w) => w.id === idA);
+  const b = state.pieces.find((w) => w.id === idB);
+  if (!a || !b) throw new Error("Both pieces need to be on the board.");
   const key = pairKey(a.name, b.name);
   const existing = state.ideas.find((idea) => pairKey(idea.parts[0], idea.parts[1]) === key);
   if (existing) {
@@ -114,10 +109,10 @@ export function combineById(idA: string, idB: string): Idea {
 export function combineByName(nameA: string, nameB: string): Idea {
   const a = findNamed(nameA);
   const b = findNamed(nameB);
-  addToWorkspace(a);
-  addToWorkspace(b);
-  const left = getCanvasState().workspace.find((w) => w.name.toLowerCase() === a.name.toLowerCase());
-  const right = getCanvasState().workspace.find((w) => w.name.toLowerCase() === b.name.toLowerCase());
+  addCustomElement(a.name, a.kind);
+  addCustomElement(b.name, b.kind);
+  const left = getCanvasState().pieces.find((w) => w.name.toLowerCase() === a.name.toLowerCase());
+  const right = getCanvasState().pieces.find((w) => w.name.toLowerCase() === b.name.toLowerCase());
   if (!left || !right) throw new Error("Could not place those pieces.");
   return combineById(left.id, right.id);
 }
@@ -138,7 +133,7 @@ export function removeIdea(id: string): void {
 }
 
 export function resetCanvas(): void {
-  emit({ workspace: [], ideas: [], selectedId: null, customName: "" });
+  emit(empty());
 }
 
 export function downloadMarkdown(): string {
@@ -157,7 +152,7 @@ export function downloadMarkdown(): string {
 
 function findNamed(name: string): CanvasElement {
   const q = name.trim().toLowerCase();
-  const fromWorkspace = state.workspace.find((el) => el.name.toLowerCase() === q);
-  if (fromWorkspace) return fromWorkspace;
+  const fromBoard = state.pieces.find((el) => el.name.toLowerCase() === q);
+  if (fromBoard) return fromBoard;
   return { id: `c_${Math.random().toString(36).slice(2, 8)}`, name: name.trim(), kind: "sponsor" };
 }

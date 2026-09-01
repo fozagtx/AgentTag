@@ -1,4 +1,4 @@
-export type ElementKind = "tech" | "sponsor" | "industry" | "wild";
+export type ElementKind = "sponsor" | "industry" | "wild";
 
 export type CanvasElement = {
   id: string;
@@ -6,14 +6,13 @@ export type CanvasElement = {
   kind: ElementKind;
 };
 
-export const KIND_LABEL: Record<ElementKind, string> = {
-  tech: "Tech",
-  sponsor: "Sponsors",
-  industry: "Industries",
-  wild: "Wild cards",
-};
+export const FIELDS: Array<{ id: ElementKind; label: string; hint: string }> = [
+  { id: "sponsor", label: "Sponsors", hint: "Tools and APIs for this event" },
+  { id: "industry", label: "Industries", hint: "Who the idea is for" },
+  { id: "wild", label: "Wild cards", hint: "A constraint or angle" },
+];
 
-/** Used only when ingesting a dropped doc, to label a name that actually appears in the file. Not shown as a prefilled palette. */
+/** Classify a name found in a dropped doc. Not shown until that name is in the file. */
 export const KIND_HINTS: Array<{ name: string; kind: ElementKind }> = [
   { name: "OpenAI", kind: "sponsor" },
   { name: "Google Gemini", kind: "sponsor" },
@@ -29,14 +28,8 @@ export const KIND_HINTS: Array<{ name: string; kind: ElementKind }> = [
   { name: "LiveKit", kind: "sponsor" },
   { name: "Solana", kind: "sponsor" },
   { name: "Privy", kind: "sponsor" },
-  { name: "LLMs", kind: "tech" },
-  { name: "Vision AI", kind: "tech" },
-  { name: "Voice calls", kind: "tech" },
-  { name: "Text to video", kind: "tech" },
-  { name: "Speech", kind: "tech" },
-  { name: "IoT sensors", kind: "tech" },
-  { name: "Maps", kind: "tech" },
-  { name: "Blockchain", kind: "tech" },
+  { name: "LLMs", kind: "sponsor" },
+  { name: "Vision AI", kind: "sponsor" },
   { name: "Health", kind: "industry" },
   { name: "Education", kind: "industry" },
   { name: "Defense", kind: "industry" },
@@ -47,4 +40,6 @@ export const KIND_HINTS: Array<{ name: string; kind: ElementKind }> = [
   { name: "Legal", kind: "industry" },
   { name: "Accessibility", kind: "industry" },
   { name: "Eldercare", kind: "industry" },
+  { name: "Voice-only", kind: "wild" },
+  { name: "Ship in 24h", kind: "wild" },
 ];

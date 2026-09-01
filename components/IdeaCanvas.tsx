@@ -4,33 +4,33 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { Download, Plus, X } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { Idea } from "@/lib/combine";
-import { CanvasElement } from "@/lib/elements";
+import { CanvasElement, ElementKind, FIELDS } from "@/lib/elements";
 import {
   addCustomElement,
   addMany,
   combineById,
   downloadMarkdown,
   getCanvasState,
-  removeFromWorkspace,
   removeIdea,
+  removePiece,
   resetCanvas,
   runScamper,
-  selectWorkspace,
+  selectPiece,
   subscribeCanvas,
 } from "@/lib/canvas-store";
 import { ingestText } from "@/lib/ingest";
 import { registerCanvasMcp } from "@/lib/webmcp-host";
 
 const EMPTY_STATE = {
-  workspace: [] as CanvasElement[],
+  pieces: [] as CanvasElement[],
   ideas: [] as Idea[],
   selectedId: null as string | null,
-  customName: "",
 };
 
 export default function IdeaCanvas() {
   const state = useSyncExternalStore(subscribeCanvas, getCanvasState, () => EMPTY_STATE);
   const [custom, setCustom] = useState("");
+  const [field, setField] = useState<ElementKind>("sponsor");
   const [notice, setNotice] = useState("");
   const [dragging, setDragging] = useState(false);
 
@@ -46,13 +46,13 @@ export default function IdeaCanvas() {
     };
   }, []);
 
-  const onWorkspaceClick = (id: string) => {
+  const onPieceClick = (id: string) => {
     if (!state.selectedId) {
-      selectWorkspace(id);
+      selectPiece(id);
       return;
     }
     if (state.selectedId === id) {
-      selectWorkspace(null);
+      selectPiece(null);
       return;
     }
     try {
@@ -66,14 +66,13 @@ export default function IdeaCanvas() {
   const addCustom = (e: React.FormEvent) => {
     e.preventDefault();
     if (!custom.trim()) return;
-    addCustomElement(custom, "sponsor");
+    addCustomElement(custom, field);
     setCustom("");
   };
 
   const ingestFiles = async (files: FileList | File[]) => {
-    const list = Array.from(files);
     const texts: string[] = [];
-    for (const file of list) {
+    for (const file of Array.from(files)) {
       const lower = file.name.toLowerCase();
       if (lower.endsWith(".pdf") || file.type === "application/pdf") {
         setNotice("Drop a .txt, .md, or .html of the sponsor list. PDF is not read in the browser.");
@@ -112,10 +111,22 @@ export default function IdeaCanvas() {
           </button>
         </div>
         <form onSubmit={addCustom} className="flex min-w-0 flex-1 items-center gap-2">
+          <select
+            value={field}
+            onChange={(e) => setField(e.target.value as ElementKind)}
+            aria-label="Field"
+            className="h-10 rounded-lg border border-white/10 bg-white/5 px-2 text-xs text-white focus:outline-none"
+          >
+            {FIELDS.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.label}
+              </option>
+            ))}
+          </select>
           <input
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
-            placeholder="Add a stack, or drop a hackathon doc"
+            placeholder="Add a name, or drop a hackathon doc"
             aria-label="Add a stack"
             className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-[#9c9c9d] focus:outline-none min-h-10"
           />
@@ -134,10 +145,8 @@ export default function IdeaCanvas() {
       </header>
 
       <main className="flex flex-1 min-h-0 flex-col gap-8 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
-        <section
-          className={`flex min-h-[52vh] flex-1 flex-col rounded-[16px] border border-dashed p-6 sm:p-8 ${
-            dragging ? "border-[#ff6b4a] bg-[rgba(255,107,74,0.06)]" : "border-white/15 bg-white/[0.02]"
-          }`}
+        <div
+          className={`grid grid-cols-1 gap-4 md:grid-cols-3 ${dragging ? "opacity-95" : ""}`}
           onDragOver={(e) => {
             e.preventDefault();
             setDragging(true);
@@ -149,9 +158,49 @@ export default function IdeaCanvas() {
             if (e.dataTransfer.files?.length) ingestFiles(e.dataTransfer.files);
           }}
         >
-          <div className="flex items-center justify-between gap-3 mb-6">
-            <h1 className="text-xl font-semibold tracking-tight">Canvas</h1>
-            {state.workspace.length > 0 ? (
+          {FIELDS.map((f) => {
+            const items = state.pieces.filter((p) => p.kind === f.id);
+            return (
+              <section
+                key={f.id}
+                className={`min-h-[240px] rounded-[16px] border p-5 ${
+                  dragging ? "border-[#ff6b4a]" : "border-white/12"
+                } bg-white/[0.02]`}
+              >
+                <div className="flex items-baseline justify-between gap-2 mb-4">
+                  <h1 className="text-base font-semibold">{f.label}</h1>
+                  <span className="text-[11px] tabular-nums text-[#9c9c9d]">{items.length}</span>
+                </div>
+                {items.length === 0 ? (
+                  <p className="text-sm leading-6 text-[#9c9c9d]">{f.hint}. Empty until an agent or a dropped doc fills it.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2.5">
+                    {items.map((el) => (
+                      <button
+                        key={el.id}
+                        type="button"
+                        onClick={() => onPieceClick(el.id)}
+                        onDoubleClick={() => removePiece(el.id)}
+                        className={`chip chip-${el.kind} ${state.selectedId === el.id ? "is-on" : ""}`}
+                      >
+                        {el.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+
+        {notice ? <p className="text-sm text-[#ff6b4a]">{notice}</p> : null}
+
+        <section className="pb-10">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h2 className="text-lg font-semibold">
+              Ideas <span className="text-[#9c9c9d] font-normal tabular-nums">{state.ideas.length}</span>
+            </h2>
+            {state.pieces.length > 0 || state.ideas.length > 0 ? (
               <button
                 type="button"
                 onClick={() => resetCanvas()}
@@ -161,38 +210,8 @@ export default function IdeaCanvas() {
               </button>
             ) : null}
           </div>
-
-          {state.workspace.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center">
-              <p className="max-w-sm text-center text-sm leading-6 text-[#9c9c9d]">
-                Empty on purpose. An agent fills stacks with add_element, or drop this weekend’s sponsor list here.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-wrap content-start gap-3">
-              {state.workspace.map((el) => (
-                <button
-                  key={el.id}
-                  type="button"
-                  onClick={() => onWorkspaceClick(el.id)}
-                  onDoubleClick={() => removeFromWorkspace(el.id)}
-                  className={`chip chip-${el.kind} ${state.selectedId === el.id ? "is-on" : ""}`}
-                >
-                  {el.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {notice ? <p className="text-sm text-[#ff6b4a]">{notice}</p> : null}
-
-        <section className="pb-10">
-          <h2 className="text-lg font-semibold mb-4">
-            Ideas <span className="text-[#9c9c9d] font-normal tabular-nums">{state.ideas.length}</span>
-          </h2>
           {state.ideas.length === 0 ? (
-            <p className="text-sm text-[#9c9c9d]">Click two pieces to combine them.</p>
+            <p className="text-sm text-[#9c9c9d]">Click one piece, then another, to combine them.</p>
           ) : (
             <ul className="space-y-4">
               {state.ideas.map((idea) => (
