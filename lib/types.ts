@@ -1,4 +1,4 @@
-export type SiteType = "documentation" | "commerce_landing" | "agency" | "portfolio";
+export type SiteType = "portfolio";
 
 export interface ToolParameterProperty {
   type: string;
@@ -55,4 +55,5 @@ export interface CrawlResult {
   markdown: string;
   framework?: string;
   detected_features: string[];
+  booking_url?: string;
 }

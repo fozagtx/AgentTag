@@ -107,7 +107,7 @@ export function AppSidebar({
                   type="button"
                   onClick={onLaunch}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-[#6f6f6f] hover:bg-black/[0.04] hover:text-[#161616] transition-colors duration-150"
-                  aria-label="Add site"
+                  aria-label="Add portfolio"
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </button>
@@ -135,8 +135,8 @@ export function AppSidebar({
                 type="button"
                 onClick={onLaunch}
                 className="flex h-9 w-9 items-center justify-center rounded-md text-[#6f6f6f] hover:bg-black/[0.04] hover:text-[#161616] transition-colors duration-150"
-                aria-label="Add site"
-                title="Add site"
+                aria-label="Add portfolio"
+                title="Add portfolio"
               >
                 <Plus className="h-4 w-4" />
               </button>

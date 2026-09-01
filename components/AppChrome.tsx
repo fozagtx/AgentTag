@@ -27,9 +27,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
           <BrandMark />
 
           <nav className="hidden md:flex items-center gap-5 text-[14px] font-medium text-[#9c9c9d]">
-            <Link href="/#features" className="hover:text-white transition-colors duration-150">Product</Link>
             <Link href="/#how-it-works" className="hover:text-white transition-colors duration-150">How it works</Link>
-            <Link href="/#developers" className="hover:text-white transition-colors duration-150">Docs</Link>
             <Link href="/dashboard" className="hover:text-white transition-colors duration-150">Dashboard</Link>
           </nav>
 
@@ -38,7 +36,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
               href="/dashboard"
               className="inline-flex h-8 items-center rounded-full bg-[#e6e6e6] px-3 text-[13px] font-medium text-[#2f3031]"
             >
-              Open dashboard
+              Add portfolio
             </Link>
           </div>
 
@@ -55,11 +53,9 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         {open ? (
           <div className="pill-nav mx-auto mt-2 max-w-[920px] rounded-2xl p-4 md:hidden">
             <div className="flex flex-col gap-3 text-[14px] font-medium text-[#9c9c9d]">
-              <Link href="/#features" onClick={() => setOpen(false)}>Product</Link>
               <Link href="/#how-it-works" onClick={() => setOpen(false)}>How it works</Link>
-              <Link href="/#developers" onClick={() => setOpen(false)}>Docs</Link>
               <Link href="/dashboard" onClick={() => setOpen(false)} className="text-white">
-                Open dashboard
+                Add portfolio
               </Link>
             </div>
           </div>
@@ -74,14 +70,12 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             <div className="space-y-4 max-w-sm">
               <BrandMark />
               <p className="text-sm text-[#9c9c9d] leading-relaxed">
-                One script tag so agents can read, search, and act on your live site.
+                Portfolio tools so an agent can see your work and book a call.
               </p>
             </div>
             <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#9c9c9d]">
               <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li>
-              <li><Link href="/#scanner" className="hover:text-white">Script tag</Link></li>
-              <li><Link href="/#features" className="hover:text-white">Capabilities</Link></li>
-              <li><Link href="/#developers" className="hover:text-white">Docs</Link></li>
+              <li><Link href="/#how-it-works" className="hover:text-white">How it works</Link></li>
             </ul>
           </div>
           <div className="text-xs text-[#9c9c9d]">© 2026 AgentTag</div>

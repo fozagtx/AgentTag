@@ -1,3 +1,5 @@
+import { extractBookingUrl } from "./firecrawl";
+
 export function runToolAgainstSnapshot(
   toolName: string,
   executionType: string,
@@ -17,61 +19,27 @@ export function runToolAgainstSnapshot(
     };
   }
 
-  if (toolName === "get_code_example") {
-    const feature = String(args.feature || "").trim();
-    const language = String(args.language || "").trim().toLowerCase();
-    const fences = extractFences(markdown).filter((fence) => {
-      const blob = `${fence.lang}\n${fence.code}`.toLowerCase();
-      const langOk = !language || fence.lang.toLowerCase() === language;
-      const featureOk = !feature || blob.includes(feature.toLowerCase());
-      return langOk && featureOk;
-    });
-    const picked = (fences.length > 0 ? fences : extractFences(markdown)).slice(0, 3);
+  if (toolName === "get_projects") {
+    const query = String(args.query || "").trim();
+    const excerpts = matchMarkdown(markdown, query || "project", 5);
     return {
-      feature: feature || null,
-      language: language || null,
-      snippets: picked,
+      query: query || null,
+      excerpts: excerpts.length > 0 ? excerpts : matchMarkdown(markdown, "work", 4),
       source_url: sourceUrl,
     };
   }
 
-  if (toolName === "get_api_reference") {
-    const needle = String(args.endpoint_or_method || "").trim();
-    const hits = matchMarkdown(markdown, needle || "GET /", 5).filter((chunk) =>
-      /\b(GET|POST|PUT|PATCH|DELETE)\b|\/v\d+\//i.test(chunk)
-    );
+  if (toolName === "book_call" || executionType === "dom_action") {
+    const bookingUrl = extractBookingUrl(markdown);
     return {
-      endpoint_or_method: needle || null,
-      excerpts: hits.length > 0 ? hits : matchMarkdown(markdown, needle, 3),
+      booking_url: bookingUrl,
+      name: String(args.name || "").trim() || null,
+      email: String(args.email || "").trim() || null,
+      preferred_time: String(args.preferred_time || "").trim() || null,
       source_url: sourceUrl,
-    };
-  }
-
-  if (toolName === "get_pricing_tiers") {
-    const excerpts = markdown
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => /(\$\s?\d|\d+\s?\/\s?(mo|month|yr|year)|pricing|plan)/i.test(line))
-      .slice(0, 20);
-    return { excerpts, source_url: sourceUrl };
-  }
-
-  if (toolName === "get_case_studies") {
-    const industry = String(args.industry || "").trim();
-    return {
-      industry: industry || null,
-      excerpts: matchMarkdown(markdown, industry || "case", 4),
-      source_url: sourceUrl,
-    };
-  }
-
-  if (executionType === "dom_action") {
-    return {
-      status: "queued_on_page",
-      tool: toolName,
-      args,
-      source_url: sourceUrl,
-      note: "This action runs on the live site after confirmation.",
+      note: bookingUrl
+        ? "Scheduler found on the page. Not booked yet."
+        : "No scheduler link on this page.",
     };
   }
 
@@ -82,16 +50,6 @@ export function runToolAgainstSnapshot(
     excerpts: query ? matchMarkdown(markdown, query, 3) : markdown.split("\n").filter(Boolean).slice(0, 8),
     source_url: sourceUrl,
   };
-}
-
-function extractFences(markdown: string): { lang: string; code: string }[] {
-  const fences: { lang: string; code: string }[] = [];
-  const re = /```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```/g;
-  let match: RegExpExecArray | null;
-  while ((match = re.exec(markdown))) {
-    fences.push({ lang: match[1] || "", code: match[2].trim() });
-  }
-  return fences;
 }
 
 function matchMarkdown(markdown: string, query: string, limit: number): string[] {

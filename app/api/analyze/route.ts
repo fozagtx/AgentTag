@@ -4,16 +4,15 @@ import { synthesizeTools } from "@/lib/synthesizer";
 import { saveSiteConfig } from "@/lib/db";
 import { SiteConfig, SiteType } from "@/lib/types";
 
-function generateSiteId(siteType: string, url: string): string {
-  const prefix = siteType === "documentation" ? "doc" : "site";
-  const randomSuffix = Math.random().toString(36).substring(2, 8);
-  return `${prefix}_${randomSuffix}`;
+function generateSiteId(): string {
+  return `folio_${Math.random().toString(36).substring(2, 8)}`;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { url, site_type = "documentation" } = body;
+    const { url } = body;
+    const site_type: SiteType = "portfolio";
 
     if (!url || typeof url !== "string") {
       return NextResponse.json({ error: "Valid website URL is required." }, { status: 400 });
@@ -26,8 +25,8 @@ export async function POST(req: NextRequest) {
     }
 
     const crawlResult = await crawlUrl(formattedUrl);
-    const tools = synthesizeTools(crawlResult, site_type as SiteType);
-    const siteId = generateSiteId(site_type, formattedUrl);
+    const tools = synthesizeTools(crawlResult, site_type);
+    const siteId = generateSiteId();
     const siteConfig: SiteConfig = {
       site_id: siteId,
       url: formattedUrl,

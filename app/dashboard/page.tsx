@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Globe,
   Plus,
   ArrowRight,
   ExternalLink,
@@ -26,11 +25,15 @@ export default function DashboardPage() {
   const [newUrl, setNewUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [formError, setFormError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [motionReady, setMotionReady] = useState(false);
+
+  const hasSites = sites.length > 0;
+  const isEmpty = !isLoadingSites && !hasSites;
 
   const loadDashboardData = async () => {
     try {
@@ -77,15 +80,31 @@ export default function DashboardPage() {
   }, [showAddModal]);
 
   useEffect(() => {
-    if (!showAddModal) return;
-    document.getElementById("add-site-url")?.focus();
-  }, [showAddModal]);
+    if (isLoadingSites) return;
+    if (showAddModal) {
+      document.getElementById("add-site-url-modal")?.focus();
+      return;
+    }
+    if (!hasSites) {
+      document.getElementById("add-site-url")?.focus();
+    }
+  }, [showAddModal, isLoadingSites, hasSites, activeTab]);
+
+  const openAddSite = () => {
+    if (!hasSites) {
+      document.getElementById("add-site-url")?.focus();
+      return;
+    }
+    setFormError("");
+    setShowAddModal(true);
+  };
 
   const handleCreateSite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUrl.trim()) return;
 
     setIsScanning(true);
+    setFormError("");
     setStatusMessage("Reading the page...");
 
     try {
@@ -101,10 +120,10 @@ export default function DashboardPage() {
         setNewUrl("");
         router.push(`/studio/${data.site_id}`);
       } else {
-        alert(data.error || "Failed to analyze URL.");
+        setFormError(data.error || "Could not read that URL.");
       }
     } catch (err: any) {
-      alert("Error: " + err.message);
+      setFormError(err.message || "Could not read that URL.");
     } finally {
       setIsScanning(false);
     }
@@ -135,6 +154,61 @@ export default function DashboardPage() {
     tools: "Tools",
   };
 
+  const addSiteForm = (inputId: string) => (
+    <form onSubmit={handleCreateSite} className="space-y-4">
+      <div>
+        <label htmlFor={inputId} className="block text-xs font-medium text-[#6f6f6f] mb-1.5">
+          Portfolio URL
+        </label>
+        <input
+          id={inputId}
+          type="url"
+          inputMode="url"
+          autoComplete="url"
+          spellCheck={false}
+          value={newUrl}
+          onChange={(e) => {
+            setNewUrl(e.target.value);
+            if (formError) setFormError("");
+          }}
+          placeholder="https://your-portfolio.com"
+          className="w-full px-3.5 py-2.5 rounded-lg bg-[#f7f7f5] border border-[#e8e8e4] text-sm text-[#161616] focus:outline-none min-h-[44px]"
+          disabled={isScanning}
+          aria-invalid={formError ? true : undefined}
+          aria-describedby={formError ? `${inputId}-error` : undefined}
+        />
+        {formError ? (
+          <p id={`${inputId}-error`} className="text-xs text-[#b42318] mt-2">
+            {formError}
+          </p>
+        ) : null}
+      </div>
+
+      {isScanning && <p className="text-xs text-[#6f6f6f]">{statusMessage}</p>}
+
+      <div className="flex justify-end gap-2.5">
+        {showAddModal ? (
+          <button
+            type="button"
+            onClick={() => setShowAddModal(false)}
+            className="px-4 py-2 min-h-[44px] rounded-lg text-sm text-[#6f6f6f] border border-[#e8e8e4]"
+          >
+            Cancel
+          </button>
+        ) : null}
+        <button
+          type="submit"
+          disabled={isScanning || !newUrl.trim()}
+          aria-busy={isScanning}
+          className="btn-keycap min-h-[44px] px-5 flex items-center gap-2 disabled:opacity-50"
+        >
+          {isScanning ? <Cpu className="h-4 w-4 animate-spin-fast" /> : <ArrowRight className="h-4 w-4" />}
+          <span>{isScanning ? "Working" : "Add portfolio"}</span>
+        </button>
+      </div>
+    </form>
+  );
+
   return (
     <div className="flex h-dvh flex-col bg-[#f7f7f5] text-[#161616]">
       <AppSidebar
@@ -142,7 +216,7 @@ export default function DashboardPage() {
         telemetryCount={telemetry.length}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onLaunch={() => setShowAddModal(true)}
+        onLaunch={openAddSite}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         motionReady={motionReady}
@@ -165,142 +239,138 @@ export default function DashboardPage() {
             <h1 className="text-lg sm:text-xl truncate">{titles[activeTab]}</h1>
           </div>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={openAddSite}
             className="btn-keycap h-9 min-h-9 px-4 flex items-center gap-2 text-xs"
             type="button"
           >
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add site</span>
+            <span className="hidden sm:inline">Add portfolio</span>
           </button>
         </header>
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 max-w-[1400px] w-full mx-auto">
-          {(activeTab === "overview" || activeTab === "activity") && (
-            <div>
-              <AgentGlobe events={telemetry} />
+          {isLoadingSites ? (
+            <div className="p-12 text-center rounded-[14px] border border-[#e8e8e4] bg-white">
+              <p className="text-sm text-[#6f6f6f]">Loading sites...</p>
             </div>
-          )}
-
-          {(activeTab === "overview" || activeTab === "sites") && (
+          ) : isEmpty ? (
+            <div className="max-w-lg mx-auto sm:mx-0 rounded-[14px] border border-[#e8e8e4] bg-white p-6 sm:p-8">
+              <h2 className="text-xl font-semibold">Add your portfolio</h2>
+              <p className="text-sm text-[#6f6f6f] mt-2 mb-6">
+                Paste your site. Agents get search_work, get_projects, and book_call.
+              </p>
+              {addSiteForm("add-site-url")}
+            </div>
+          ) : (
             <>
-              <div className={`${activeTab === "overview" ? "mt-8" : ""} relative max-w-md`}>
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8a8a8a]" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search sites"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white border border-[#e8e8e4] text-sm text-[#161616] placeholder:text-[#8a8a8a] focus:outline-none"
-                />
-              </div>
+              {(activeTab === "overview" || activeTab === "activity") && (
+                <div>
+                  <AgentGlobe events={telemetry} />
+                </div>
+              )}
 
-              {isLoadingSites ? (
-                <div className="p-12 text-center mt-6 rounded-[14px] border border-[#e8e8e4] bg-white">
-                  <p className="text-sm text-[#6f6f6f]">Loading sites...</p>
-                </div>
-              ) : filteredSites.length === 0 ? (
-                <div className="p-10 text-center mt-6 rounded-[14px] border border-[#e8e8e4] bg-white">
-                  <Globe className="h-6 w-6 text-[#8a8a8a] mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold">No sites yet</h3>
-                  <p className="text-sm text-[#6f6f6f] max-w-md mx-auto mt-2">
-                    Paste a URL to generate tools and a script tag for that site.
-                  </p>
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="btn-keycap mt-6 h-9 px-4 inline-flex items-center gap-2 text-xs"
-                    type="button"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add site
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  {filteredSites.map((site) => (
-                    <div
-                      key={site.site_id}
-                      className="p-5 rounded-[14px] bg-white border border-[#e8e8e4] flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h3 className="text-base font-semibold truncate">{decodeHtml(site.title)}</h3>
-                            <a
-                              href={site.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-xs font-mono text-[#6f6f6f] hover:text-[#161616] flex items-center gap-1 mt-1 truncate"
-                            >
-                              <span className="truncate">{site.url}</span>
-                              <ExternalLink className="h-3 w-3 shrink-0" />
-                            </a>
-                          </div>
-                          <button
-                            onClick={() => handleDelete(site.site_id)}
-                            className="p-1.5 min-h-9 min-w-9 rounded-lg text-[#8a8a8a] hover:text-[#161616] hover:bg-black/[0.04] flex items-center justify-center"
-                            title="Remove site"
-                            type="button"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                        {(site.tools?.length || 0) > 0 ? (
-                          <div className="mt-4 flex flex-wrap gap-1.5">
-                            {site.tools.map((tool) => (
-                              <span
-                                key={tool.id}
-                                className="px-2 py-0.5 rounded-md bg-[#f7f7f5] border border-[#e8e8e4] font-mono text-[11px] text-[#6f6f6f]"
+              {(activeTab === "overview" || activeTab === "sites") && (
+                <>
+                  <div className={`${activeTab === "overview" ? "mt-8" : ""} relative max-w-md`}>
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8a8a8a]" />
+                    <input
+                      type="search"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search sites"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white border border-[#e8e8e4] text-sm text-[#161616] placeholder:text-[#8a8a8a] focus:outline-none"
+                    />
+                  </div>
+
+                  {filteredSites.length === 0 ? (
+                    <div className="p-10 text-center mt-6 rounded-[14px] border border-[#e8e8e4] bg-white">
+                      <h3 className="text-lg font-semibold">No matching sites</h3>
+                      <p className="text-sm text-[#6f6f6f] max-w-md mx-auto mt-2">
+                        Nothing matches “{searchQuery}”.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      {filteredSites.map((site) => (
+                        <div
+                          key={site.site_id}
+                          className="p-5 rounded-[14px] bg-white border border-[#e8e8e4] flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <h3 className="text-base font-semibold truncate">{decodeHtml(site.title)}</h3>
+                                <a
+                                  href={site.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs font-mono text-[#6f6f6f] hover:text-[#161616] flex items-center gap-1 mt-1 truncate"
+                                >
+                                  <span className="truncate">{site.url}</span>
+                                  <ExternalLink className="h-3 w-3 shrink-0" />
+                                </a>
+                              </div>
+                              <button
+                                onClick={() => handleDelete(site.site_id)}
+                                className="p-1.5 min-h-9 min-w-9 rounded-lg text-[#8a8a8a] hover:text-[#161616] hover:bg-black/[0.04] flex items-center justify-center"
+                                title="Remove site"
+                                type="button"
                               >
-                                {tool.name}
-                              </span>
-                            ))}
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                            {(site.tools?.length || 0) > 0 ? (
+                              <div className="mt-4 flex flex-wrap gap-1.5">
+                                {site.tools.map((tool) => (
+                                  <span
+                                    key={tool.id}
+                                    className="px-2 py-0.5 rounded-md bg-[#f7f7f5] border border-[#e8e8e4] font-mono text-[11px] text-[#6f6f6f]"
+                                  >
+                                    {tool.name}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
                           </div>
-                        ) : null}
-                      </div>
-                      <div className="mt-5 pt-3 border-t border-[#e8e8e4] flex justify-end">
+                          <div className="mt-5 pt-3 border-t border-[#e8e8e4] flex justify-end">
+                            <Link
+                              href={`/studio/${site.site_id}`}
+                              className="h-9 px-4 rounded-lg bg-[#f7f7f5] border border-[#e8e8e4] text-xs font-medium hover:bg-[#efefed] flex items-center gap-1.5"
+                            >
+                              Open
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeTab === "tools" && (
+                <div className="space-y-3">
+                  {sites.flatMap((site) =>
+                    (site.tools || []).map((tool) => (
+                      <div
+                        key={`${site.site_id}-${tool.id}`}
+                        className="p-4 rounded-[12px] bg-white border border-[#e8e8e4] flex items-center justify-between gap-4"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-mono text-sm truncate">{tool.name}</div>
+                          <div className="text-xs text-[#6f6f6f] truncate">{tool.description}</div>
+                        </div>
                         <Link
                           href={`/studio/${site.site_id}`}
-                          className="h-9 px-4 rounded-lg bg-[#f7f7f5] border border-[#e8e8e4] text-xs font-medium hover:bg-[#efefed] flex items-center gap-1.5"
+                          className="shrink-0 h-9 px-3 rounded-lg bg-[#f7f7f5] border border-[#e8e8e4] text-xs hover:bg-[#efefed] flex items-center"
                         >
-                          Open
-                          <ArrowRight className="h-3.5 w-3.5" />
+                          {decodeHtml(site.title)}
                         </Link>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               )}
             </>
-          )}
-
-          {activeTab === "tools" && (
-            <div className="space-y-3">
-              {sites.length === 0 ? (
-                <div className="p-10 text-center rounded-[14px] border border-[#e8e8e4] bg-white">
-                  <h3 className="text-lg font-semibold">No tools yet</h3>
-                  <p className="text-sm text-[#6f6f6f] mt-2">Add a site first.</p>
-                </div>
-              ) : (
-                sites.flatMap((site) =>
-                  (site.tools || []).map((tool) => (
-                    <div
-                      key={`${site.site_id}-${tool.id}`}
-                      className="p-4 rounded-[12px] bg-white border border-[#e8e8e4] flex items-center justify-between gap-4"
-                    >
-                      <div className="min-w-0">
-                        <div className="font-mono text-sm truncate">{tool.name}</div>
-                        <div className="text-xs text-[#6f6f6f] truncate">{tool.description}</div>
-                      </div>
-                      <Link
-                        href={`/studio/${site.site_id}`}
-                        className="shrink-0 h-9 px-3 rounded-lg bg-[#f7f7f5] border border-[#e8e8e4] text-xs hover:bg-[#efefed] flex items-center"
-                      >
-                        {decodeHtml(site.title)}
-                      </Link>
-                    </div>
-                  ))
-                )
-              )}
-            </div>
           )}
         </div>
       </div>
@@ -317,53 +387,17 @@ export default function DashboardPage() {
           aria-labelledby="add-site-title"
           onClick={(e) => e.stopPropagation()}
         >
-            <div className="flex items-center justify-between pb-3 border-b border-[#e8e8e4]">
-              <h3 id="add-site-title" className="text-lg font-semibold">Add a site</h3>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-sm text-[#6f6f6f] hover:text-[#161616]"
-                type="button"
-              >
-                Close
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateSite} className="mt-5 space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-[#6f6f6f] mb-1.5">Website URL</label>
-                <input
-                  type="url"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="https://docs.yourcompany.com"
-                  id="add-site-url"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#f7f7f5] border border-[#e8e8e4] text-sm text-[#161616] focus:outline-none min-h-[44px]"
-                  disabled={isScanning}
-                />
-              </div>
-
-              {isScanning && (
-                <p className="text-xs text-[#6f6f6f]">{statusMessage}</p>
-              )}
-
-              <div className="mt-5 flex justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 min-h-[44px] rounded-lg text-sm text-[#6f6f6f] border border-[#e8e8e4]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isScanning || !newUrl.trim()}
-                  className="btn-keycap min-h-[44px] px-5 flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isScanning ? <Cpu className="h-4 w-4 animate-spin-fast" /> : <ArrowRight className="h-4 w-4" />}
-                  <span>{isScanning ? "Working" : "Add site"}</span>
-                </button>
-              </div>
-            </form>
+          <div className="flex items-center justify-between pb-3 border-b border-[#e8e8e4]">
+            <h3 id="add-site-title" className="text-lg font-semibold">Add your portfolio</h3>
+            <button
+              onClick={() => setShowAddModal(false)}
+              className="text-sm text-[#6f6f6f] hover:text-[#161616] min-h-9 px-2"
+              type="button"
+            >
+              Close
+            </button>
+          </div>
+          <div className="mt-5">{addSiteForm("add-site-url-modal")}</div>
         </div>
       </div>
     </div>

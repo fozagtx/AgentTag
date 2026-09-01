@@ -18,9 +18,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentTag | Launch your product to millions of agents",
+  title: "AgentTag | Portfolio tools so agents can book a call",
   description:
-    "Paste your URL, generate Web MCP tools, and embed one script tag so Claude, Cursor, and buyer agents can read, search, and act on your site.",
+    "Paste your portfolio. AgentTag reads the page and gives agents tools to search your work, list projects, and book a call.",
   icons: {
     icon: "/logo.png",
     apple: "/apple-touch-icon.png",

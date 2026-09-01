@@ -82,14 +82,16 @@ function parseFirecrawlPayload(targetUrl: string, payload: any): CrawlResult | n
     extractTitleFromUrl(targetUrl);
   const description = data.metadata?.description || data.metadata?.ogDescription || "";
   const html = typeof data.html === "string" ? data.html : "";
+  const haystack = `${markdown} ${html}`;
 
   return {
     url: targetUrl,
     title,
     description,
     markdown,
-    framework: detectFramework(`${markdown} ${html} ${targetUrl}`, targetUrl),
-    detected_features: detectFeatures(`${markdown} ${html}`),
+    framework: detectFramework(`${haystack} ${targetUrl}`, targetUrl),
+    detected_features: detectFeatures(haystack),
+    booking_url: extractBookingUrl(haystack) || undefined,
   };
 }
 
@@ -109,14 +111,16 @@ async function scrapeWithFetch(targetUrl: string): Promise<CrawlResult | null> {
 
   const markdown = htmlToCleanMarkdown(html);
   if (!markdown) return null;
+  const haystack = `${markdown} ${html}`;
 
   return {
     url: targetUrl,
     title: extractTitleFromHtml(html) || extractTitleFromMarkdown(markdown) || extractTitleFromUrl(targetUrl),
     description: extractMetaDescription(html),
     markdown,
-    framework: detectFramework(`${html} ${markdown} ${targetUrl}`, targetUrl),
-    detected_features: detectFeatures(`${markdown} ${html}`),
+    framework: detectFramework(`${haystack} ${targetUrl}`, targetUrl),
+    detected_features: detectFeatures(haystack),
+    booking_url: extractBookingUrl(haystack) || undefined,
   };
 }
 
@@ -196,6 +200,14 @@ export function hasCheckout(lower: string): boolean {
 
 export function hasBooking(lower: string): boolean {
   return /\b(calendly|cal\.com|book a (call|demo|meeting)|schedule a (call|demo))\b/.test(lower);
+}
+
+export function extractBookingUrl(content: string): string | null {
+  const match = content.match(
+    /https?:\/\/(?:www\.)?(?:calendly\.com|cal\.com|savvycal\.com|tidycal\.com|(?:meetings\.)?hubspot\.com\/meetings)[^\s)"'<>\\]*/i
+  );
+  if (!match) return null;
+  return match[0].replace(/[.,;]+$/, "");
 }
 
 function decodeEntities(text: string): string {

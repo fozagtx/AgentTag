@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { SiteConfig, WebMCPTool } from "@/lib/types";
+import { SiteConfig } from "@/lib/types";
 import {
   Code2,
   Play,
@@ -10,7 +10,6 @@ import {
   Check,
   ToggleLeft,
   ToggleRight,
-  Plus,
   Terminal,
   ExternalLink,
   ChevronDown,
@@ -32,8 +31,7 @@ export default function StudioPage() {
   const [toolArgs, setToolArgs] = useState<Record<string, string>>({});
   const [simulationResult, setSimulationResult] = useState<any>(null);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [newToolPrompt, setNewToolPrompt] = useState("");
-  const [isAddingTool, setIsAddingTool] = useState(false);
+
   const [expandedSchema, setExpandedSchema] = useState<string | null>(null);
   const [copiedScript, setCopiedScript] = useState(false);
   const [copiedMcp, setCopiedMcp] = useState(false);
@@ -96,47 +94,6 @@ export default function StudioPage() {
     } finally {
       setIsSimulating(false);
     }
-  };
-
-  const handleAddTool = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newToolPrompt.trim() || !config) return;
-    setIsAddingTool(true);
-
-    const newToolName =
-      newToolPrompt
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, "_")
-        .slice(0, 30) || "custom_tool";
-
-    const newTool: WebMCPTool = {
-      id: `tool_${Date.now()}`,
-      name: newToolName,
-      description: newToolPrompt,
-      parameters: {
-        type: "object",
-        properties: {
-          query: { type: "string", description: "Parameter input" },
-        },
-        required: ["query"],
-      },
-      execution_type: "dom_search",
-      is_enabled: true,
-      requires_approval: false,
-    };
-
-    const updatedTools = [...config.tools, newTool];
-    const updatedConfig = { ...config, tools: updatedTools };
-    setConfig(updatedConfig);
-    setSelectedTool(newTool.name);
-    setNewToolPrompt("");
-    setIsAddingTool(false);
-
-    await fetch(`/api/sites/${siteId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tools: updatedTools }),
-    });
   };
 
   if (loading) {
@@ -300,26 +257,6 @@ export default function StudioPage() {
               ))}
             </div>
 
-            <form
-              onSubmit={handleAddTool}
-              className="p-5 rounded-[14px] border border-[#e8e8e4] bg-white flex flex-col sm:flex-row gap-2"
-            >
-              <input
-                type="text"
-                value={newToolPrompt}
-                onChange={(e) => setNewToolPrompt(e.target.value)}
-                placeholder="Describe a tool to add"
-                className="flex-1 px-4 py-2.5 rounded-lg bg-white/5 border border-[#e8e8e4] text-sm text-[#161616] placeholder:text-[#8a8a8a] focus:outline-none min-h-11"
-              />
-              <button
-                type="submit"
-                disabled={isAddingTool || !newToolPrompt.trim()}
-                className="btn-keycap min-h-11 px-4 inline-flex items-center justify-center gap-1.5 text-xs disabled:opacity-50"
-              >
-                <Plus className="h-4 w-4" />
-                Add tool
-              </button>
-            </form>
           </div>
 
           <div className="lg:col-span-5">
