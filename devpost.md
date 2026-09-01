@@ -2,39 +2,52 @@
 
 ## Inspiration
 
-Hackathon ideation is usually a blank doc plus a sponsor PDF. We wanted a board you can actually mix on, and we wanted an agent to sit on that same board through Web MCP. That is Cofound: a Web MCP native ideation canvas.
+Hackathon teams start from a blank doc and a sponsor PDF. We built a Web MCP native ideation canvas so a person and an agent can mix stacks on the same board.
 
 ## What it does
 
-Three columns: Sponsors, Industries, Wild cards.
+Cofound is a Web MCP native ideation canvas.
 
-Industries already has health, education, finance, defense, and the rest. Sponsors and Wild cards start empty so you (or an agent) can add this weekend’s tools.
+Three fields: Sponsors, Industries, Wild cards.
 
-Type a name, drop a txt/md/html list, or let the agent add pieces. Click two chips to combine them. Download saves a markdown file.
+- Sponsors: event tools and APIs. Starts empty. Add by typing, dropping a txt/md/html list, or an agent calling `add_element` / `ingest_doc`.
+- Industries: Health, Education, Defense, Finance, Entertainment, Sports, Climate, Legal, Accessibility, Eldercare.
+- Wild cards: constraints. Starts empty.
 
-https://cofound-wzks.onrender.com
+Click two pieces to combine them. SCAMPER is optional. Download exports markdown.
+
+Live: https://cofound-wzks.onrender.com
 
 ## How we built it
 
-Next.js in the browser. No database. The board lives in localStorage.
+Next.js 16, React 19, client only. Board state in localStorage. No database.
 
-Web MCP is registered on the page. An agent can add a stack, ingest a doc, combine two pieces, run SCAMPER, and download. Download and reset ask before they run.
+Web MCP on the page (`window.WebMCP` and JSON-RPC `tools/list`, `tools/call`):
 
-Sponsors is amber, Industries is teal, Wild cards is purple.
+- list_palette
+- add_element
+- ingest_doc
+- combine
+- list_ideas
+- scamper
+- download_canvas (asks first)
+- reset_canvas (asks first)
+
+Colors: Sponsors amber, Industries teal, Wild cards purple.
 
 ## Challenges we ran into
 
-We preloaded a huge sponsor list and the UI looked packed. Then we stripped it and lost the three columns. Industries is back as a starter set. Sponsors wait for the real event.
+Preloaded sponsor chips packed the UI. Removing them also hid the three fields. Fix: keep Industries filled, leave Sponsors and Wild cards empty.
 
-PDF drop still fails in the browser. Use txt, md, or html.
+PDF ingest is not supported in the browser. Use txt, md, or html.
 
 ## Accomplishments that we're proud of
 
-It is live. You and an agent use the same canvas. You can download the ideas.
+Live canvas. Eight MCP tools. Same board for clicks and for the agent. Markdown download.
 
 ## What we learned
 
-Make it agent native and human native in one. People click the board. Agents call Web MCP. Same canvas.
+The agent tools have to write the same board the UI writes.
 
 ## What's next for Cofound
 
