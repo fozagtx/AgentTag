@@ -52,7 +52,7 @@ Double-click a chip to remove it. **Clear** resets the board and restores the in
 3. Paste this:
 
 ```
-Hello, I want to create a little prototype. I have an OpenAI API and a social API. Let's ideate what I can build.
+Hello, I want to create a little prototype. I have an OpenAI API key and an ElevenLabs API key. Let's ideate what I can build.
 ```
 
 ## Web MCP
