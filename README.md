@@ -2,25 +2,26 @@
 
 <img src="public/logo.png" alt="CoFound" width="72" height="72">
 
-Ideation canvas for first-time founders and hackathon teams. Combine sponsor tools with a problem space, then download what you made.
+Web MCP native ideation canvas. Mix stacks the way [Little Alchemy](https://littlealchemy.com/) mixes elements: two pieces make one idea.
 
 Live: [cofound-wzks.onrender.com](https://cofound-wzks.onrender.com)
 
-The method is [Little Alchemy ideation](https://thehackathonplaybook.dev/playbook/ideation) from The Hackathon Playbook. No account. No database. State stays in the browser.
+Three fields: **Sponsors**, **Industries**, **Wild cards**. Click two chips to combine them. Download the board when you are done. An agent can run the same moves on the page.
+
+Industries ships with Health, Education, Defense, Finance, Entertainment, Sports, Climate, Legal, Accessibility, Eldercare. Sponsors and Wild cards start empty. Add this weekend’s tools by typing, dropping a `.txt` / `.md` / `.html` list, or an agent calling `add_element` / `ingest_doc`.
 
 ## Features
 
-- Three fields: Sponsors, Industries, Wild cards. Empty until an agent or a dropped doc fills them
-- Type a stack in the header if you want to add one by hand
-- Click two pieces on the canvas to combine them into an idea
-- SCAMPER on an idea when you want to push it
-- Download a markdown file of the canvas
-- In-page Web MCP so an agent can run the same actions
+- Little Alchemy combine: two pieces, one idea
+- Three colored fields (amber / teal / purple)
+- Drop a hackathon or sponsor doc to register stacks named in that file
+- SCAMPER on an idea
+- Download `ideation-canvas.md`
+- Web MCP on the page
 
 ## Prerequisites
 
 - Node.js 20.9+
-- `npm install`
 
 ## Getting started
 
@@ -33,27 +34,27 @@ Open the URL Next prints (often [http://localhost:3000](http://localhost:3000)).
 
 ## Usage
 
-1. An agent calls `add_element` / `ingest_doc`, or drop a `.txt` / `.md` / `.html` sponsor list, or type a name.
-2. Click two canvas pieces to combine them.
-3. Optional: **Push with SCAMPER** on an idea.
-4. **Download** to save `ideation-canvas.md`.
+1. Put stacks in the fields (type, drop a doc, or let an agent add them).
+2. Click one piece, then another, to combine them like Little Alchemy.
+3. Optional: **Push with SCAMPER**.
+4. **Download**.
 
-Double-click a canvas piece to remove it. **Clear** empties the workspace.
+Double-click a piece to remove it. **Clear** resets the board. Industries come back as the starter set.
 
 ## Web MCP
 
-The page is the MCP server. Agents call `window.WebMCP` or JSON-RPC `postMessage` (`tools/list`, `tools/call`):
+Agents call `window.WebMCP` or JSON-RPC `postMessage` (`tools/list`, `tools/call`):
 
 | Tool | What it does |
 |---|---|
-| `list_palette` | List palette and workspace pieces |
-| `add_element` | Add a piece (use `kind: sponsor` for event APIs) |
-| `ingest_doc` | Register only stacks named in pasted hackathon / sponsor text |
+| `list_palette` | List the three fields |
+| `add_element` | Add a piece (`kind`: sponsor, industry, or wild) |
+| `ingest_doc` | Register stacks named in pasted text |
 | `combine` | Combine two pieces by name |
-| `list_ideas` | List ideas on the canvas |
+| `list_ideas` | List ideas |
 | `scamper` | Run SCAMPER on an idea id |
-| `download_canvas` | Download markdown (asks in the browser first) |
-| `reset_canvas` | Clear workspace and ideas (asks first) |
+| `download_canvas` | Download markdown (asks first) |
+| `reset_canvas` | Clear the board (asks first) |
 
 ## Scripts
 
@@ -65,8 +66,8 @@ The page is the MCP server. Agents call `window.WebMCP` or JSON-RPC `postMessage
 
 ## Limits
 
-- Combinations are structured from the two pieces you picked. CoFound does not call an LLM and does not invent prize history.
-- Ideas live in `localStorage` on that browser. Clearing site data clears the canvas.
-- There is no backend, auth, or shared team room.
+- Combinations come from the two names you clicked.
+- The board is `localStorage` on that browser.
+- PDF drop is not supported. Use txt, md, or html.
 
 Deploy notes: [DEPLOYMENT.md](DEPLOYMENT.md).
