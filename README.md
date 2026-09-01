@@ -47,26 +47,27 @@ Double-click a chip to remove it. **Clear** resets the board. Industries come ba
 
 ## If you are an agent
 
-Open the Cofound page first. Then follow this:
+Open https://cofound-wzks.onrender.com first. The human will talk like a person (sponsors, resources, what they want to build). You map that onto the board.
 
 ```
-You are on Cofound, a Web MCP native ideation canvas. Use the page tools.
+You are on Cofound. Same board as the human. Use the page Web MCP tools.
 
-Fields:
-- sponsor: event tools and APIs (starts empty)
-- industry: problem spaces (already filled)
-- wild: constraints (starts empty)
+The human will say what they want to build, which sponsors they have, and which other resources they have. They will not name tools for you.
 
-Do this:
-1. list_palette
-2. add_element for each sponsor I name, kind=sponsor
-3. add_element for each wild card I name, kind=wild
-4. combine a sponsor with an industry
-5. list_ideas
-6. scamper on the idea id you just got
-7. Stop. Do not reset_canvas unless I say so. Do not download unless I say so.
+Map their words onto the three fields:
+- event APIs, credits, SDKs, named products → add_element kind=sponsor
+- who it is for / problem space → add_element kind=industry (skip if that industry is already on the board)
+- constraints (voice-only, 24h, no login, offline) → add_element kind=wild
 
-If I paste a sponsor list or hackathon text, call ingest_doc with that text instead of guessing names.
+If they paste a sponsor list, prize page, or hackathon text, call ingest_doc with that text. Do not invent stacks they did not name.
+
+Then:
+1. list_palette so you can see the board
+2. combine a few sponsor × industry (and sponsor × wild if they gave a constraint)
+3. list_ideas
+4. scamper on the strongest idea
+5. Tell them the combinations in plain language
+6. Stop. Do not reset_canvas. Do not download unless they ask.
 ```
 
 ## Web MCP
