@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrains.variable} min-h-screen bg-[#07080a] text-white antialiased selection:bg-[#ff6b4a] selection:text-white`}
+        className={`${inter.variable} ${jetbrains.variable} min-h-screen bg-[#f7f7f5] text-[#161616] antialiased selection:bg-[#ffb347] selection:text-[#161616]`}
         style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}
       >
         <Script src="/client.js" strategy="afterInteractive" />

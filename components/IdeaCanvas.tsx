@@ -98,10 +98,10 @@ export default function IdeaCanvas() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#07080a] text-white">
-      <header className="shrink-0 border-b border-white/10 px-4 py-3 space-y-3 sm:space-y-0 sm:flex sm:h-14 sm:items-center sm:gap-3 sm:py-0">
+    <div className="flex min-h-dvh flex-col bg-[#f7f7f5] text-[#161616]">
+      <header className="shrink-0 border-b border-[#e8e8e4] bg-[#f7f7f5] px-4 py-3 space-y-3 sm:space-y-0 sm:flex sm:h-14 sm:items-center sm:gap-3 sm:py-0">
         <div className="flex items-center justify-between gap-3">
-          <BrandMark />
+          <BrandMark light />
           <button
             type="button"
             onClick={download}
@@ -115,7 +115,7 @@ export default function IdeaCanvas() {
             value={field}
             onChange={(e) => setField(e.target.value as ElementKind)}
             aria-label="Field"
-            className="h-10 rounded-lg border border-white/10 bg-white/5 px-2 text-xs text-white focus:outline-none"
+            className="h-10 rounded-lg border border-[#e8e8e4] bg-white px-2 text-xs text-[#161616] focus:outline-none"
           >
             {FIELDS.map((f) => (
               <option key={f.id} value={f.id}>
@@ -128,7 +128,7 @@ export default function IdeaCanvas() {
             onChange={(e) => setCustom(e.target.value)}
             placeholder="Add a name, or drop a hackathon doc"
             aria-label="Add a stack"
-            className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-[#9c9c9d] focus:outline-none min-h-10"
+            className="min-w-0 flex-1 rounded-lg border border-[#e8e8e4] bg-white px-3 py-2 text-sm text-[#161616] placeholder:text-[#8a8a8a] focus:outline-none min-h-10"
           />
           <button type="submit" className="btn-keycap h-10 min-h-10 px-3" aria-label="Add">
             <Plus className="h-4 w-4" />
@@ -163,16 +163,16 @@ export default function IdeaCanvas() {
             return (
               <section
                 key={f.id}
-                className={`min-h-[240px] rounded-[16px] border p-5 ${
-                  dragging ? "border-[#ff6b4a]" : "border-white/12"
-                } bg-white/[0.02]`}
+                className={`field-${f.id} min-h-[240px] rounded-[16px] border p-5 ${
+                  dragging ? "ring-2 ring-[#161616]" : ""
+                }`}
               >
                 <div className="flex items-baseline justify-between gap-2 mb-4">
                   <h1 className="text-base font-semibold">{f.label}</h1>
-                  <span className="text-[11px] tabular-nums text-[#9c9c9d]">{items.length}</span>
+                  <span className="text-[11px] tabular-nums text-[#6f6f6f]">{items.length}</span>
                 </div>
                 {items.length === 0 ? (
-                  <p className="text-sm leading-6 text-[#9c9c9d]">{f.hint}. Empty until an agent or a dropped doc fills it.</p>
+                  <p className="text-sm leading-6 text-[#6f6f6f]">{f.hint}. Empty until an agent or a dropped doc fills it.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2.5">
                     {items.map((el) => (
@@ -198,43 +198,43 @@ export default function IdeaCanvas() {
         <section className="pb-10">
           <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold">
-              Ideas <span className="text-[#9c9c9d] font-normal tabular-nums">{state.ideas.length}</span>
+              Ideas <span className="text-[#6f6f6f] font-normal tabular-nums">{state.ideas.length}</span>
             </h2>
             {state.pieces.length > 0 || state.ideas.length > 0 ? (
               <button
                 type="button"
                 onClick={() => resetCanvas()}
-                className="text-xs text-[#9c9c9d] hover:text-white min-h-10 px-2"
+                className="text-xs text-[#6f6f6f] hover:text-[#161616] min-h-10 px-2"
               >
                 Clear
               </button>
             ) : null}
           </div>
           {state.ideas.length === 0 ? (
-            <p className="text-sm text-[#9c9c9d]">Click one piece, then another, to combine them.</p>
+            <p className="text-sm text-[#6f6f6f]">Click one piece, then another, to combine them.</p>
           ) : (
             <ul className="space-y-4">
               {state.ideas.map((idea) => (
-                <li key={idea.id} className="rounded-[14px] border border-white/10 bg-white/[0.03] p-5">
+                <li key={idea.id} className="rounded-[14px] border border-[#e8e8e4] bg-white p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <h3 className="text-base font-semibold">{idea.title}</h3>
-                      <p className="mt-2 text-sm text-[#c8c8c8] leading-relaxed">{idea.pitch}</p>
+                      <p className="mt-2 text-sm text-[#6f6f6f] leading-relaxed">{idea.pitch}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeIdea(idea.id)}
-                      className="shrink-0 text-[#9c9c9d] hover:text-white min-h-10 min-w-10 inline-flex items-center justify-center"
+                      className="shrink-0 text-[#6f6f6f] hover:text-[#161616] min-h-10 min-w-10 inline-flex items-center justify-center"
                       aria-label={`Remove ${idea.title}`}
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                   {idea.scamper ? (
-                    <ul className="mt-4 space-y-2 text-sm text-[#9c9c9d]">
+                    <ul className="mt-4 space-y-2 text-sm text-[#6f6f6f]">
                       {Object.entries(idea.scamper).map(([k, v]) => (
                         <li key={k}>
-                          <span className="text-white/80">{k}.</span> {v}
+                          <span className="text-[#161616]">{k}.</span> {v}
                         </li>
                       ))}
                     </ul>
@@ -242,7 +242,7 @@ export default function IdeaCanvas() {
                     <button
                       type="button"
                       onClick={() => runScamper(idea.id)}
-                      className="mt-4 text-sm text-[#ffb347] hover:text-white min-h-10"
+                      className="mt-4 text-sm text-[#145a52] hover:text-[#161616] min-h-10"
                     >
                       Push with SCAMPER
                     </button>
