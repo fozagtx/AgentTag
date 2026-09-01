@@ -47,13 +47,10 @@ Double-click a chip to remove it. **Clear** resets the board and restores the in
 
 ## Use it in Codex
 
-1. Open Codex.
-2. Enter https://cofound-wzks.onrender.com in the Codex browser. The agent cannot open the page itself.
+Enter https://cofound-wzks.onrender.com in the Codex browser. The agent cannot open the page itself.
 3. Paste this:
 
-```
 Hello, I want to create a little prototype. I have an OpenAI API key and an ElevenLabs API key. Let's ideate what I can build.
-```
 
 ## Web MCP
 
